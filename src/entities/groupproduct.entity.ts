@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import Product from "./product.entity";
 // import { Product } from "./product.entity";
 
 @Entity({ name: "nhomsanpham" })
@@ -32,8 +33,8 @@ class GroupProduct {
   @IsString()
   description: string;
 
-  // @OneToMany(() => Product, (e) => e.groupProduct)
-  // products: Product[];
+  @OneToMany(() => Product, (e) => e.groupProduct)
+  products: Product[];
 
   @CreateDateColumn({ name: "ngaytao" })
   createdAt: Date;

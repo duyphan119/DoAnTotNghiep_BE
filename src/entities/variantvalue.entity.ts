@@ -5,14 +5,17 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import ProductVariant from "./productvariant.entity";
 import Variant from "./variant.entity";
 
 @Entity({ name: "giatribienthe" })
-class VariantValue extends BaseEntity {
+class VariantValue {
   @PrimaryGeneratedColumn({ name: "magiatribienthe" })
   id: number;
 
@@ -30,9 +33,9 @@ class VariantValue extends BaseEntity {
   @UpdateDateColumn({ name: "ngaycapnhat" })
   updatedAt: Date;
 
-  // @ManyToMany(() => ProductVariant, (e) => e.variantValues)
-  // @JoinTable({ name: "mathangbienthe_giatribienthe" })
-  // productVariants: ProductVariant[];
+  @ManyToMany(() => ProductVariant, (e) => e.variantValues)
+  @JoinTable({ name: "mathangbienthe_giatribienthe" })
+  productVariants: ProductVariant[];
 
   @ManyToOne(() => Variant, (e) => e.variantValues)
   @JoinColumn({ name: "mabt", referencedColumnName: "id" })
