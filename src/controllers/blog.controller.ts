@@ -10,6 +10,13 @@ class BlogController {
     }
     return res.status(STATUS_OK).json(data);
   }
+  async getById(req: Request, res: Response) {
+    const { error, data } = await blogService.getById(+req.params.id);
+    if (error) {
+      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    }
+    return res.status(STATUS_OK).json(data);
+  }
 }
 
 export default new BlogController();

@@ -41,9 +41,20 @@ class BlogService {
           ...(take !== -1 ? { take } : {}),
           ...(skip !== -1 ? { skip } : {}),
         });
-        resolve({ data: { blogs, count, take } });
+        resolve({ data: { items: blogs, count, take } });
       } catch (error) {
         console.log("GET ALL BLOGS ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  getById(id: number): Promise<ResponseData> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const blog = await this.blogRepository.findOneBy({ id });
+        resolve({ data: blog });
+      } catch (error) {
+        console.log("GET BLOG BY ID ERROR", error);
         resolve({ error });
       }
     });
