@@ -5,8 +5,8 @@ import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 const blogRouter = Router();
 
 blogRouter.get("/seed", blogController.seed);
-blogRouter.get("/:id", getUser, blogController.getById);
-blogRouter.get("/", blogController.getAll);
+blogRouter.get("/:id", blogController.getById);
+blogRouter.get("/", getUser, blogController.getAll);
 blogRouter.post("/", requireIsAdmin, blogController.createBlog);
 blogRouter.patch("/:id", requireIsAdmin, blogController.updateBlog);
 blogRouter.delete("/soft/:id", requireIsAdmin, blogController.softDeleteBlog);

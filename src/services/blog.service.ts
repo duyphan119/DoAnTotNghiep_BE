@@ -79,7 +79,7 @@ class BlogService {
   updateBlog(
     id: number,
     userId: number,
-    dto: CreateBlogDTO
+    dto: Partial<CreateBlogDTO>
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
