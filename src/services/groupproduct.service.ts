@@ -48,7 +48,7 @@ class GroupProductService {
           });
         resolve({ data: { items: groupProducts, count } });
       } catch (error) {
-        console.log("GET ALL GROUPS PRODUCT ERROR", error);
+        console.log("GET ALL GROUP PRODUCTS ERROR", error);
         resolve({ error });
       }
     });
@@ -61,7 +61,7 @@ class GroupProductService {
         });
         resolve({ data: groupproduct });
       } catch (error) {
-        console.log("GET GROUPPRODUCT BY ID ERROR", error);
+        console.log("GET GROUP PRODUCT BY ID ERROR", error);
         resolve({ error });
       }
     });
