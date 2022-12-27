@@ -1,7 +1,14 @@
 import { AppDataSource } from "../data-source";
 import Blog from "../entities/blog.entity";
 import { QueryParams, ResponseData } from "../utils/types";
-import { ILike } from "typeorm";
+import {
+  handleSort,
+  handlePagination,
+  handleILike,
+  handleSearchILike,
+} from "../utils";
+import slugify from "slugify";
+
 type BlogQueryParams = QueryParams &
   Partial<{
     title: string;
@@ -9,39 +16,33 @@ type BlogQueryParams = QueryParams &
     content: string;
     q: string;
   }>;
+
+type CreateBlogDTO = {
+  title: string;
+  content: string;
+} & Partial<{ thumbnail: string }>;
+
 class BlogService {
   private blogRepository = AppDataSource.getRepository(Blog);
 
   getAll(query: BlogQueryParams, isAdmin?: boolean): Promise<ResponseData> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, _) => {
       try {
-        const { sortBy, sortType, withDeleted, title, slug, content, q } =
-          query;
-        const take: number = query.limit ? +query.limit : -1;
-        const skip: number =
-          take !== -1 && query.p ? (+query.p - 1) * take : -1;
-
+        const { withDeleted, title, slug, content, q } = query;
+        const { wherePagination } = handlePagination(query);
+        const { sort } = handleSort(query);
         const [blogs, count] = await this.blogRepository.findAndCount({
-          order: {
-            [sortBy || "id"]: sortType || "desc",
-          },
+          order: sort,
           where: {
-            ...(title ? { title: ILike(`%${title}%`) } : {}),
-            ...(slug ? { slug: ILike(`%${slug}%`) } : {}),
-            ...(content ? { content: ILike(`%${content}%`) } : {}),
-            ...(q
-              ? {
-                  title: ILike(`%${q}%`),
-                  slug: ILike(`%${q}%`),
-                  content: ILike(`%${q}%`),
-                }
-              : {}),
+            ...handleILike("title", title),
+            ...handleILike("slug", slug),
+            ...handleILike("content", content),
+            ...handleSearchILike(["title", "slug", "content"], q),
           },
           withDeleted: isAdmin && withDeleted ? true : false,
-          ...(take !== -1 ? { take } : {}),
-          ...(skip !== -1 ? { skip } : {}),
+          ...wherePagination,
         });
-        resolve({ data: { items: blogs, count, take } });
+        resolve({ data: { items: blogs, count } });
       } catch (error) {
         console.log("GET ALL BLOGS ERROR", error);
         resolve({ error });
@@ -49,12 +50,125 @@ class BlogService {
     });
   }
   getById(id: number): Promise<ResponseData> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, _) => {
       try {
         const blog = await this.blogRepository.findOneBy({ id });
         resolve({ data: blog });
       } catch (error) {
         console.log("GET BLOG BY ID ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  createBlog(userId: number, dto: CreateBlogDTO): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { title } = dto;
+        const newBlog = await this.blogRepository.save({
+          ...dto,
+          userId,
+          slug: slugify(title, { lower: true }),
+        });
+        resolve({ data: newBlog });
+      } catch (error) {
+        console.log("CREATE BLOG ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  updateBlog(
+    id: number,
+    userId: number,
+    dto: CreateBlogDTO
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const blog = await this.blogRepository.findOneBy({ id, userId });
+        if (blog) {
+          const { title } = dto;
+          const newBlog = await this.blogRepository.save({
+            ...blog,
+            ...dto,
+            ...(title ? { slug: slugify(title, { lower: true }) } : {}),
+          });
+          resolve({ data: newBlog });
+        }
+        resolve({});
+      } catch (error) {
+        console.log("UPDATE BLOG ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  softDeleteBlog(id: number): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.blogRepository.softDelete({ id });
+        resolve({});
+      } catch (error) {
+        console.log("SOFT DELETE BLOG ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  restoreBlog(id: number): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.blogRepository.restore({ id });
+        resolve({});
+      } catch (error) {
+        console.log("RESTORE BLOG ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  deleteBlog(id: number): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.blogRepository.delete({ id });
+        resolve({});
+      } catch (error) {
+        console.log("DELETE BLOG ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+  seed(): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const count = await this.blogRepository.count();
+        if (count === 0) {
+          const blogs = await this.blogRepository.save([
+            {
+              title: "Bài viết 1",
+              content: "<p>Bài viết 1</p>",
+              slug: "bai-viet-1",
+              thumbnail:
+                "https://res.cloudinary.com/dwhjftwvw/image/upload/v1672045683/cv-app/221226/blbxhawm1udmeaxwnxcj.jpg",
+              userId: 1,
+            },
+            {
+              title: "Bài viết 2",
+              content: "<p>Bài viết 2</p>",
+              slug: "bai-viet-2",
+              thumbnail:
+                "https://res.cloudinary.com/dwhjftwvw/image/upload/v1672045971/cv-app/221226/ir9rvjq6ns3ckzxoxkyf.jpg",
+              userId: 1,
+            },
+            {
+              title: "Bài viết 3",
+              content: "<p>Bài viết 3</p>",
+              slug: "bai-viet-3",
+              thumbnail:
+                "https://res.cloudinary.com/dwhjftwvw/image/upload/v1672046012/cv-app/221226/j5ohfuzd3yd9qjsdudis.jpg",
+              userId: 1,
+            },
+          ]);
+          resolve({ data: { items: blogs } });
+        }
+        resolve({ data: { items: [] } });
+      } catch (error) {
+        console.log("CREATE SEED BLOGS ERROR", error);
         resolve({ error });
       }
     });

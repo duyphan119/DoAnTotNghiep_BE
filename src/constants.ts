@@ -7,3 +7,5 @@ export const STATUS_OK = 200;
 export const STATUS_CREATED = 201;
 export const STATUS_UNAUTH = 401;
 export const STATUS_INTERVAL_ERROR = 500;
+export const MSG_SUCCESS = "Success";
+export const MSG_ERROR = "Error";
