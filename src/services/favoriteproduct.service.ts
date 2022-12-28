@@ -5,9 +5,9 @@ import { PaginationParams, ResponseData } from "../utils/types";
 import { RelationQueryParams } from "./product.service";
 
 class FavoriteProductService {
-  private favoriteProductRepository =
-    AppDataSource.getRepository(FavoriteProduct);
-
+  getRepository() {
+    return AppDataSource.getRepository(FavoriteProduct);
+  }
   getByUser(
     userId: number,
     query: PaginationParams & RelationQueryParams
@@ -16,7 +16,7 @@ class FavoriteProductService {
       try {
         const { product_variants, images } = query;
         const { wherePagination } = handlePagination(query);
-        const favoriteProducts = await this.favoriteProductRepository.find({
+        const favoriteProducts = await this.getRepository().find({
           where: { userId },
           ...wherePagination,
           relations: {
@@ -47,7 +47,7 @@ class FavoriteProductService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newFavoriteProduct = await this.favoriteProductRepository.save({
+        const newFavoriteProduct = await this.getRepository().save({
           userId,
           productId,
         });
@@ -65,7 +65,7 @@ class FavoriteProductService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.favoriteProductRepository.delete({
+        await this.getRepository().delete({
           userId,
           productId,
         });

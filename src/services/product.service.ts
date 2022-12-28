@@ -44,7 +44,9 @@ type CreateProductDTO = {
 }>;
 
 class ProductService {
-  private productRepository = AppDataSource.getRepository(Product);
+  getRepository() {
+    return AppDataSource.getRepository(Product);
+  }
 
   minPrice(product: Product) {
     let min = 0;
@@ -92,7 +94,7 @@ class ProductService {
         } = query;
         const { wherePagination } = handlePagination(query);
         const { sortBy, sortType, sort } = handleSort(query);
-        let [products, count] = await this.productRepository.findAndCount({
+        let [products, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
             ...handleILike("name", name),
@@ -157,7 +159,7 @@ class ProductService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const product = await this.productRepository.findOneBy({ id });
+        const product = await this.getRepository().findOneBy({ id });
         if (product) {
           resolve({ data: product });
         }
@@ -173,7 +175,7 @@ class ProductService {
     return new Promise(async (resolve, _) => {
       try {
         const { name } = dto;
-        const newProduct = await this.productRepository.save({
+        const newProduct = await this.getRepository().save({
           ...dto,
           slug: slugify(name, { lower: true }),
         });
@@ -188,10 +190,10 @@ class ProductService {
   updateProduct(id: number, dto: Partial<Product>): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const product = await this.productRepository.findOneBy({ id });
+        const product = await this.getRepository().findOneBy({ id });
         if (product) {
           const { name } = dto;
-          const newProduct = await this.productRepository.save({
+          const newProduct = await this.getRepository().save({
             ...product,
             ...dto,
             ...(name ? { slug: slugify(name, { lower: true }) } : {}),
@@ -210,9 +212,9 @@ class ProductService {
   updateThumbnail(id: number, thumbnail: string): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const product = await this.productRepository.findOneBy({ id });
+        const product = await this.getRepository().findOneBy({ id });
         if (product) {
-          const newProduct = await this.productRepository.save({
+          const newProduct = await this.getRepository().save({
             ...product,
             thumbnail,
           });
@@ -230,7 +232,7 @@ class ProductService {
   softDeleteProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE PRODUCT ERROR", error);
@@ -242,7 +244,7 @@ class ProductService {
   restoreProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE PRODUCT ERROR", error);
@@ -254,7 +256,7 @@ class ProductService {
   deleteProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE PRODUCT ERROR", error);

@@ -20,7 +20,9 @@ type CreateVariantDTO = {
 };
 
 class VariantService {
-  private variantRepository = AppDataSource.getRepository(Variant);
+  getRepository() {
+    return AppDataSource.getRepository(Variant);
+  }
 
   getAll(query: VariantQueryParams, isAdmin?: boolean): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
@@ -28,7 +30,7 @@ class VariantService {
         const { withDeleted, name, q } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
-        const [variants, count] = await this.variantRepository.findAndCount({
+        const [variants, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
             ...handleILike("name", name),
@@ -47,7 +49,7 @@ class VariantService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const variant = await this.variantRepository.findOneBy({ id });
+        const variant = await this.getRepository().findOneBy({ id });
         resolve({ data: variant });
       } catch (error) {
         console.log("GET VARIANT BY ID ERROR", error);
@@ -58,7 +60,7 @@ class VariantService {
   createVariant(dto: CreateVariantDTO): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newVariant = await this.variantRepository.save(dto);
+        const newVariant = await this.getRepository().save(dto);
         resolve({ data: newVariant });
       } catch (error) {
         console.log("CREATE VARIANT ERROR", error);
@@ -72,9 +74,9 @@ class VariantService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const variant = await this.variantRepository.findOneBy({ id });
+        const variant = await this.getRepository().findOneBy({ id });
         if (variant) {
-          const newVariant = await this.variantRepository.save({
+          const newVariant = await this.getRepository().save({
             ...variant,
             ...dto,
           });
@@ -90,7 +92,7 @@ class VariantService {
   softDeleteVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.variantRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE VARIANT ERROR", error);
@@ -101,7 +103,7 @@ class VariantService {
   restoreVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.variantRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE VARIANT ERROR", error);
@@ -112,7 +114,7 @@ class VariantService {
   deleteVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.variantRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE VARIANT ERROR", error);
@@ -123,9 +125,9 @@ class VariantService {
   seed(): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const count = await this.variantRepository.count();
+        const count = await this.getRepository().count();
         if (count === 0) {
-          const variants = await this.variantRepository.save([
+          const variants = await this.getRepository().save([
             { name: "Màu sắc" },
             { name: "Kích cỡ" },
           ]);

@@ -23,7 +23,9 @@ type CreateGroupProductDTO = {
 } & Partial<{ thumbnail: string; description: string }>;
 
 class GroupProductService {
-  private groupProductRepository = AppDataSource.getRepository(GroupProduct);
+  getRepository() {
+    return AppDataSource.getRepository(GroupProduct);
+  }
 
   getAll(
     query: GroupProductQueryParams,
@@ -34,18 +36,17 @@ class GroupProductService {
         const { withDeleted, name, slug, description, q } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
-        const [groupProducts, count] =
-          await this.groupProductRepository.findAndCount({
-            order: sort,
-            where: {
-              ...handleILike("name", name),
-              ...handleILike("slug", slug),
-              ...handleILike("description", description),
-              ...handleSearchILike(["name", "slug", "description"], q),
-            },
-            withDeleted: isAdmin && withDeleted ? true : false,
-            ...wherePagination,
-          });
+        const [groupProducts, count] = await this.getRepository().findAndCount({
+          order: sort,
+          where: {
+            ...handleILike("name", name),
+            ...handleILike("slug", slug),
+            ...handleILike("description", description),
+            ...handleSearchILike(["name", "slug", "description"], q),
+          },
+          withDeleted: isAdmin && withDeleted ? true : false,
+          ...wherePagination,
+        });
         resolve({ data: { items: groupProducts, count } });
       } catch (error) {
         console.log("GET ALL GROUP PRODUCTS ERROR", error);
@@ -56,7 +57,7 @@ class GroupProductService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const groupproduct = await this.groupProductRepository.findOneBy({
+        const groupproduct = await this.getRepository().findOneBy({
           id,
         });
         resolve({ data: groupproduct });
@@ -70,7 +71,7 @@ class GroupProductService {
     return new Promise(async (resolve, _) => {
       try {
         const { name } = dto;
-        const newGroupProduct = await this.groupProductRepository.save({
+        const newGroupProduct = await this.getRepository().save({
           ...dto,
           slug: slugify(name, { lower: true }),
         });
@@ -87,12 +88,12 @@ class GroupProductService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const groupProduct = await this.groupProductRepository.findOneBy({
+        const groupProduct = await this.getRepository().findOneBy({
           id,
         });
         if (groupProduct) {
           const { name } = dto;
-          const newGroupProduct = await this.groupProductRepository.save({
+          const newGroupProduct = await this.getRepository().save({
             ...groupProduct,
             ...dto,
             ...(name ? { slug: slugify(name, { lower: true }) } : {}),
@@ -109,7 +110,7 @@ class GroupProductService {
   softDeleteGroupProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.groupProductRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE GROUP PRODUCT ERROR", error);
@@ -120,7 +121,7 @@ class GroupProductService {
   restoreGroupProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.groupProductRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE GROUP PRODUCT ERROR", error);
@@ -131,7 +132,7 @@ class GroupProductService {
   deleteGroupProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.groupProductRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE GROUP PRODUCT ERROR", error);
@@ -142,9 +143,9 @@ class GroupProductService {
   seed(): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const count = await this.groupProductRepository.count();
+        const count = await this.getRepository().count();
         if (count === 0) {
-          const groupproducts = await this.groupProductRepository.save([
+          const groupproducts = await this.getRepository().save([
             {
               name: "Áo thun",
               slug: "ao-thun",

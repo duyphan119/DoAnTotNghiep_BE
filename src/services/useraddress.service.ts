@@ -10,17 +10,22 @@ export type CreateUserAddressDTO = {
   address: string;
 };
 class UserAddressService {
-  private userAddressRepository = AppDataSource.getRepository(UserAddress);
+  getRepository() {
+    return AppDataSource.getRepository(UserAddress);
+  }
+
+  getByDTO(userId: number, dto: CreateUserAddressDTO) {
+    return this.getRepository().findOneBy({ userId, ...dto });
+  }
 
   getByUserId(userId: number, query: PaginationParams): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
         const { wherePagination } = handlePagination(query);
-        const [groupProducts, count] =
-          await this.userAddressRepository.findAndCount({
-            where: { userId },
-            ...wherePagination,
-          });
+        const [groupProducts, count] = await this.getRepository().findAndCount({
+          where: { userId },
+          ...wherePagination,
+        });
         resolve({ data: { items: groupProducts, count } });
       } catch (error) {
         console.log("GET ALL USER ADDRESS BY USER ID ERROR", error);
@@ -34,7 +39,7 @@ class UserAddressService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newGroupProduct = await this.userAddressRepository.save({
+        const newGroupProduct = await this.getRepository().save({
           ...dto,
           userId,
         });
@@ -52,12 +57,12 @@ class UserAddressService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const userAddress = await this.userAddressRepository.findOneBy({
+        const userAddress = await this.getRepository().findOneBy({
           id,
           userId,
         });
         if (userAddress) {
-          const newUserAddress = await this.userAddressRepository.save({
+          const newUserAddress = await this.getRepository().save({
             ...userAddress,
             ...dto,
           });
@@ -73,7 +78,7 @@ class UserAddressService {
   deleteUserAddress(id: number, userId: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.userAddressRepository.delete({ id, userId });
+        await this.getRepository().delete({ id, userId });
         resolve({});
       } catch (error) {
         console.log("DELETE USER ADDRESS ERROR", error);

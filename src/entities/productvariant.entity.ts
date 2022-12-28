@@ -17,6 +17,7 @@ import {
   UpdateEvent,
 } from "typeorm";
 import { AppDataSource } from "../data-source";
+import productService from "../services/product.service";
 import productVariantService from "../services/productvariant.service";
 import OrderItem from "./orderitem.entity";
 import Product from "./product.entity";
@@ -77,10 +78,7 @@ export class ProductVariantSubscriber
           productId
         );
         resolve(
-          AppDataSource.getRepository(Product).update(
-            { inventory: totalInventory },
-            { id: productId }
-          )
+          productService.updateProduct(productId, { inventory: totalInventory })
         );
       } catch (error) {
         reject(error);
@@ -98,10 +96,9 @@ export class ProductVariantSubscriber
               productId
             );
             resolve(
-              AppDataSource.getRepository(Product).update(
-                { inventory: totalInventory },
-                { id: productId }
-              )
+              productService.updateProduct(productId, {
+                inventory: totalInventory,
+              })
             );
           }
         }

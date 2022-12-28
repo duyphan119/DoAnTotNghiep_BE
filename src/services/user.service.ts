@@ -25,7 +25,9 @@ type CreateUserDTO = {
 };
 
 class UserService {
-  private userRepository = AppDataSource.getRepository(User);
+  getRepository() {
+    return AppDataSource.getRepository(User);
+  }
   hashPassword(rawPassword: string): Promise<string> {
     return new Promise(async (resolve, reject) => {
       try {
@@ -54,7 +56,7 @@ class UserService {
         const { fullName, phone, email, q, withDeleted } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
-        const [users, count] = await this.userRepository.findAndCount({
+        const [users, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
             isAdmin: false,
@@ -85,7 +87,7 @@ class UserService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.getRepository().findOneBy({ id });
         resolve(user ? { data: user } : {});
       } catch (error) {
         console.log("GET USER BY ID ERROR", error);
@@ -96,7 +98,7 @@ class UserService {
   getByEmail(email: string): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.userRepository.findOneBy({ email });
+        const user = await this.getRepository().findOneBy({ email });
         resolve(user ? { data: user } : {});
       } catch (error) {
         console.log("GET USER BY EMAIL ERROR", error);
@@ -107,7 +109,7 @@ class UserService {
   createUser(dto: CreateUserDTO): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newUser = await this.userRepository.save({
+        const newUser = await this.getRepository().save({
           ...dto,
           password: await this.hashPassword(dto.password),
         });
@@ -121,9 +123,9 @@ class UserService {
   updateUser(id: number, dto: Partial<CreateUserDTO>): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.getRepository().findOneBy({ id });
         if (user) {
-          const newUser = await this.userRepository.save({ ...user, ...dto });
+          const newUser = await this.getRepository().save({ ...user, ...dto });
           resolve({ data: newUser });
         }
         resolve({});
@@ -140,14 +142,14 @@ class UserService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.getRepository().findOneBy({ id });
         if (user) {
           const compareResult = await this.comparePassword(
             oldPassword,
             user.password
           );
           if (compareResult) {
-            const newUser = await this.userRepository.save({
+            const newUser = await this.getRepository().save({
               ...user,
               password: await this.hashPassword(newPassword),
             });
@@ -164,7 +166,7 @@ class UserService {
   softDeleteUser(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.userRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE USER ERROR", error);
@@ -175,7 +177,7 @@ class UserService {
   restoreUser(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.userRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE USER ERROR", error);
@@ -186,7 +188,7 @@ class UserService {
   deleteUser(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.userRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE USER ERROR", error);
@@ -197,9 +199,9 @@ class UserService {
   seed(): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const count = await this.userRepository.count();
+        const count = await this.getRepository().count();
         if (count === 0) {
-          const users = await this.userRepository.save([
+          const users = await this.getRepository().save([
             {
               fullName: "Phan Khánh Duy",
               isAdmin: true,

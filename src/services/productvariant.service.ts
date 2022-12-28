@@ -16,12 +16,14 @@ export type CreateProductVariantDTO = {
 };
 
 class ProductVariantService {
-  productVariantRepository = AppDataSource.getRepository(ProductVariant);
+  getRepository() {
+    return AppDataSource.getRepository(ProductVariant);
+  }
 
   totalInventory(productId: number): Promise<number> {
     return new Promise(async (resolve, _) => {
       try {
-        const [res] = await this.productVariantRepository
+        const [res] = await this.getRepository()
           .createQueryBuilder("mhbt")
           .groupBy("mhbt.mahang")
           .select("sum(mhbt.soluongton)", "total")
@@ -44,7 +46,7 @@ class ProductVariantService {
         const { sort } = handleSort(query);
         const { wherePagination } = handlePagination(query);
         const [productVariants, count] =
-          await this.productVariantRepository.findAndCount({
+          await this.getRepository().findAndCount({
             order: sort,
             ...wherePagination,
             where: {
@@ -67,7 +69,7 @@ class ProductVariantService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const productVariant = await this.productVariantRepository.findOneBy({
+        const productVariant = await this.getRepository().findOneBy({
           id,
         });
         resolve({ data: productVariant });
@@ -81,7 +83,7 @@ class ProductVariantService {
   createProductVariant(dto: CreateProductVariantDTO): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newProductVariant = await this.productVariantRepository.save(dto);
+        const newProductVariant = await this.getRepository().save(dto);
         resolve({ data: newProductVariant });
       } catch (error) {
         console.log("CREATE PRODUCT VARIANTS ERROR", error);
@@ -93,9 +95,7 @@ class ProductVariantService {
   createProductVariants(dto: CreateProductVariantDTO[]): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const newProductVariants = await this.productVariantRepository.save(
-          dto
-        );
+        const newProductVariants = await this.getRepository().save(dto);
         resolve({ data: { items: newProductVariants } });
       } catch (error) {
         console.log("CREATE PRODUCT VARIANTS ERROR", error);
@@ -110,11 +110,11 @@ class ProductVariantService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const productVariant = await this.productVariantRepository.findOneBy({
+        const productVariant = await this.getRepository().findOneBy({
           id,
         });
         if (productVariant) {
-          const newProductVariant = await this.productVariantRepository.save({
+          const newProductVariant = await this.getRepository().save({
             ...productVariant,
             ...dto,
           });
@@ -131,7 +131,7 @@ class ProductVariantService {
   softDeleteProductVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productVariantRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE PRODUCT VARIANT ERROR", error);
@@ -143,7 +143,7 @@ class ProductVariantService {
   restoreProductVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productVariantRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE PRODUCT VARIANT ERROR", error);
@@ -155,7 +155,7 @@ class ProductVariantService {
   deleteProductVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.productVariantRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT ERROR", error);

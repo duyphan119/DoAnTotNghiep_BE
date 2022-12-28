@@ -23,15 +23,16 @@ type CreateBlogDTO = {
 } & Partial<{ thumbnail: string }>;
 
 class BlogService {
-  private blogRepository = AppDataSource.getRepository(Blog);
-
+  getRepository() {
+    return AppDataSource.getRepository(Blog);
+  }
   getAll(query: BlogQueryParams, isAdmin?: boolean): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
         const { withDeleted, title, slug, content, q } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
-        const [blogs, count] = await this.blogRepository.findAndCount({
+        const [blogs, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
             ...handleILike("title", title),
@@ -52,7 +53,7 @@ class BlogService {
   getById(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const blog = await this.blogRepository.findOneBy({ id });
+        const blog = await this.getRepository().findOneBy({ id });
         resolve({ data: blog });
       } catch (error) {
         console.log("GET BLOG BY ID ERROR", error);
@@ -64,7 +65,7 @@ class BlogService {
     return new Promise(async (resolve, _) => {
       try {
         const { title } = dto;
-        const newBlog = await this.blogRepository.save({
+        const newBlog = await this.getRepository().save({
           ...dto,
           userId,
           slug: slugify(title, { lower: true }),
@@ -83,10 +84,10 @@ class BlogService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const blog = await this.blogRepository.findOneBy({ id, userId });
+        const blog = await this.getRepository().findOneBy({ id, userId });
         if (blog) {
           const { title } = dto;
-          const newBlog = await this.blogRepository.save({
+          const newBlog = await this.getRepository().save({
             ...blog,
             ...dto,
             ...(title ? { slug: slugify(title, { lower: true }) } : {}),
@@ -103,7 +104,7 @@ class BlogService {
   softDeleteBlog(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.blogRepository.softDelete({ id });
+        await this.getRepository().softDelete({ id });
         resolve({});
       } catch (error) {
         console.log("SOFT DELETE BLOG ERROR", error);
@@ -114,7 +115,7 @@ class BlogService {
   restoreBlog(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.blogRepository.restore({ id });
+        await this.getRepository().restore({ id });
         resolve({});
       } catch (error) {
         console.log("RESTORE BLOG ERROR", error);
@@ -125,7 +126,7 @@ class BlogService {
   deleteBlog(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.blogRepository.delete({ id });
+        await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
         console.log("DELETE BLOG ERROR", error);
@@ -136,9 +137,9 @@ class BlogService {
   seed(): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const count = await this.blogRepository.count();
+        const count = await this.getRepository().count();
         if (count === 0) {
-          const blogs = await this.blogRepository.save([
+          const blogs = await this.getRepository().save([
             {
               title: "Bài viết 1",
               content: "<p>Bài viết 1</p>",
