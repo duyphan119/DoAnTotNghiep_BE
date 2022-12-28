@@ -46,11 +46,11 @@ class Product {
   @OneToMany(() => ProductVariant, (e) => e.product)
   productVariants: ProductVariant[];
 
-  @Column({ default: 0, name: "solongton" })
+  @Column({ nullable: true, default: 0, name: "solongton" })
   @IsNumber()
   inventory: number;
 
-  @Column({ nullable: false, name: "giaban", default: 40000 })
+  @Column({ nullable: false, name: "giaban" })
   @IsNumber()
   price: number;
 

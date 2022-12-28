@@ -57,6 +57,7 @@ class UserService {
         const [users, count] = await this.userRepository.findAndCount({
           order: sort,
           where: {
+            isAdmin: false,
             ...handleILike("fullName", fullName),
             ...handleILike("phone", phone),
             ...handleILike("email", email),
@@ -64,6 +65,15 @@ class UserService {
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
+          select: {
+            id: true,
+            createdAt: true,
+            email: true,
+            fullName: true,
+            point: true,
+            phone: true,
+            updatedAt: true,
+          },
         });
         resolve({ data: { items: users, count } });
       } catch (error) {

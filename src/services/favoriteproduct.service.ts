@@ -1,0 +1,81 @@
+import { AppDataSource } from "../data-source";
+import FavoriteProduct from "../entities/favoriteproduct.entity";
+import { handlePagination } from "../utils";
+import { PaginationParams, ResponseData } from "../utils/types";
+import { RelationQueryParams } from "./product.service";
+
+class FavoriteProductService {
+  private favoriteProductRepository =
+    AppDataSource.getRepository(FavoriteProduct);
+
+  getByUser(
+    userId: number,
+    query: PaginationParams & RelationQueryParams
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { product_variants, images } = query;
+        const { wherePagination } = handlePagination(query);
+        const favoriteProducts = await this.favoriteProductRepository.find({
+          where: { userId },
+          ...wherePagination,
+          relations: {
+            product: {
+              ...(product_variants
+                ? {
+                    productVariants: {
+                      variantValues: { variant: true },
+                    },
+                  }
+                : {}),
+              ...(images ? { images: true } : {}),
+              groupProduct: true,
+            },
+          },
+        });
+        resolve({ data: favoriteProducts });
+      } catch (error) {
+        console.log("GET FAVORITE PRODUCTS BY USER ID ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
+  createFavoriteProduct(
+    userId: number,
+    productId: number
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const newFavoriteProduct = await this.favoriteProductRepository.save({
+          userId,
+          productId,
+        });
+        resolve({ data: newFavoriteProduct });
+      } catch (error) {
+        console.log("CREATE FAVORITE PRODUCT ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
+  deleteFavoriteProduct(
+    userId: number,
+    productId: number
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.favoriteProductRepository.delete({
+          userId,
+          productId,
+        });
+        resolve({});
+      } catch (error) {
+        console.log("DELETE FAVORITE PRODUCT ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+}
+
+export default new FavoriteProductService();
