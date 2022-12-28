@@ -3,6 +3,7 @@ import authRouter from "./auth.router";
 import blogRouter from "./blog.router";
 import groupProductRouter from "./groupproduct.router";
 import productRouter from "./product.router";
+import productVariantRouter from "./productvariant.router";
 import userRouter from "./user.router";
 import userAddressRouter from "./useraddress.router";
 import variantRouter from "./variant.router";
@@ -18,5 +19,6 @@ v1Router.use("/variant-value", variantValueRouter);
 v1Router.use("/auth", authRouter);
 v1Router.use("/user", userRouter);
 v1Router.use("/product", productRouter);
+v1Router.use("/product-variant", productVariantRouter);
 
 export default v1Router;

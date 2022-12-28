@@ -19,9 +19,9 @@ router.post(
       console.log({ __dirname, path, filePath: req.file.path });
       console.log(path, req.file.path);
       await unlinkAsync(path + "/" + req.file.path);
-      return res.status(201).json({ code: 200, message: "Success", data: img });
+      return res.status(201).json({ message: "Success", data: img });
     } else {
-      res.status(500).json({ code: 500, message: `Error` });
+      res.status(500).json({ message: `Error` });
     }
   }
 );
@@ -44,7 +44,7 @@ router.post(
           result.push({ path: filePath });
           promiseImgs.push(
             getCloudinary().v2.uploader.upload(filePath, {
-              folder: "cv-app/" + generateFolder(new Date()),
+              folder: "DoAnTotNghiep_BE/" + generateFolder(new Date()),
             })
           );
           promises.push(unlinkAsync(path + "/" + filePath));
@@ -52,14 +52,12 @@ router.post(
         const resultImgs = await Promise.all(promiseImgs);
         await Promise.all(promises);
 
-        return res
-          .status(201)
-          .json({ code: 201, message: "Success", data: resultImgs });
+        return res.status(201).json({ message: "Success", data: resultImgs });
       }
     } catch (error) {
       console.log(error);
     }
-    return res.status(500).json({ code: 500, message: `Error` });
+    return res.status(500).json({ message: `Error` });
   }
 );
 

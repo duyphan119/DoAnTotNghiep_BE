@@ -16,6 +16,8 @@ import {
   UpdateDateColumn,
   UpdateEvent,
 } from "typeorm";
+import { AppDataSource } from "../data-source";
+import productVariantService from "../services/productvariant.service";
 import OrderItem from "./orderitem.entity";
 import Product from "./product.entity";
 import VariantValue from "./variantvalue.entity";
@@ -59,51 +61,53 @@ class ProductVariant {
   items: OrderItem[];
 }
 export default ProductVariant;
-// @EventSubscriber()
-// export class ProductVariantSubscriber
-//   implements EntitySubscriberInterface<ProductVariant>
-// {
-//   listenTo() {
-//     return ProductVariant;
-//   }
+@EventSubscriber()
+export class ProductVariantSubscriber
+  implements EntitySubscriberInterface<ProductVariant>
+{
+  listenTo() {
+    return ProductVariant;
+  }
 
-//   afterInsert(event: InsertEvent<ProductVariant>): Promise<any> {
-//     return new Promise(async (resolve, reject) => {
-//       try {
-//         const productId = event.entity.productId;
-//         const totalInventory = await productVariantService.totalInventory(
-//           productId
-//         );
-//         resolve(
-//           Product.update({ inventory: totalInventory }, { id: productId })
-//         );
-//       } catch (error) {
-//         reject(error);
-//       }
-//     });
-//   }
+  afterInsert(event: InsertEvent<ProductVariant>): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const productId = event.entity.productId;
+        const totalInventory = await productVariantService.totalInventory(
+          productId
+        );
+        resolve(
+          AppDataSource.getRepository(Product).update(
+            { inventory: totalInventory },
+            { id: productId }
+          )
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
-//   afterUpdate(event: UpdateEvent<ProductVariant>): Promise<any> {
-//     return new Promise(async (resolve, reject) => {
-//       try {
-//         if (event.entity) {
-//           const { productId } = event.entity;
-//           if (productId) {
-//             const totalInventory = await productVariantService.totalInventory(
-//               productId
-//             );
-//             resolve(
-//               Product.update({ inventory: totalInventory }, { id: productId })
-//             );
-//           }
-//         }
-//       } catch (error) {
-//         reject(error);
-//       }
-//     });
-//   }
-
-//   // afterUpdate(event: UpdateEvent<ProductVariant>): Promise<any> {
-
-//   // }
-// }
+  afterUpdate(event: UpdateEvent<ProductVariant>): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (event.entity) {
+          const { productId } = event.entity;
+          if (productId) {
+            const totalInventory = await productVariantService.totalInventory(
+              productId
+            );
+            resolve(
+              AppDataSource.getRepository(Product).update(
+                { inventory: totalInventory },
+                { id: productId }
+              )
+            );
+          }
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+}
