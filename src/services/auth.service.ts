@@ -1,4 +1,3 @@
-import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { __prod__ } from "../constants";
 class AuthService {
@@ -9,7 +8,7 @@ class AuthService {
   }
   signRefreshToken(obj: any, expiresIn?: number) {
     return jwt.sign(obj, process.env.RT_SECRET as string, {
-      expiresIn: expiresIn || 31536000000,
+      expiresIn: expiresIn || 1000 * 60 * 60 * 24 * 365,
     });
   }
   verifyRefreshToken(refreshToken: string) {

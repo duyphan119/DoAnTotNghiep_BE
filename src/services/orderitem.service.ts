@@ -1,14 +1,14 @@
 import { AppDataSource } from "../data-source";
 import OrderItem from "../entities/orderitem.entity";
 import { ResponseData } from "../utils/types";
-import productService from "./product.service";
+import ProductVariant from "../entities/productvariant.entity";
 import productVariantService from "./productvariant.service";
 
 export type CreateOrderItemDTO = {
   quantity: number;
-  productId: number;
+  productVariantId: number;
   orderId: number;
-} & Partial<{ productVariantId: number; price: number }>;
+} & Partial<{ price: number }>;
 
 class OrderItemService {
   getRepository() {
@@ -22,12 +22,12 @@ class OrderItemService {
           ...(relations
             ? {
                 relations: {
-                  product: {
-                    images: true,
-                  },
                   productVariant: {
                     variantValues: {
                       variant: true,
+                    },
+                    product: {
+                      images: true,
                     },
                   },
                 },
@@ -49,7 +49,7 @@ class OrderItemService {
           relations: { productVariant: true },
         });
         const promises: Promise<any>[] = [];
-        orderItems.forEach((orderItem) => {
+        orderItems.forEach((orderItem: OrderItem) => {
           if (orderItem.productVariant) {
             promises.push(
               productVariantService.updateProductVariant(
@@ -61,10 +61,14 @@ class OrderItemService {
               )
             );
           } else {
+            let productVariant: ProductVariant = orderItem.productVariant;
             promises.push(
-              productService.updateProduct(orderItem.product.id, {
-                inventory: orderItem.product.inventory - orderItem.quantity,
-              })
+              productVariantService.updateProductVariant(
+                orderItem.productVariantId,
+                {
+                  inventory: productVariant.inventory - orderItem.quantity,
+                }
+              )
             );
           }
         });
@@ -112,11 +116,12 @@ class OrderItemService {
     return new Promise(async (resolve, _) => {
       try {
         const orderItem = await this.getRepository().findOneBy({
-          productId: dto.productId,
+          // productId: dto.productId,
           orderId: dto.orderId,
-          ...(dto.productVariantId
-            ? { productVariantId: dto.productVariantId }
-            : {}),
+          productVariantId: dto.productVariantId,
+          // ...(dto.productVariantId
+          //   ? { productVariantId: dto.productVariantId }
+          //   : {}),
         });
         const newOrderItem = await this.getRepository().save(
           orderItem

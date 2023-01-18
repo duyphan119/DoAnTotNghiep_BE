@@ -7,12 +7,12 @@ import {
   handleILike,
   handleSearchILike,
 } from "../utils";
-import slugify from "slugify";
 
 type VariantQueryParams = QueryParams &
   Partial<{
     name: string;
     q: string;
+    variant_values: string;
   }>;
 
 type CreateVariantDTO = {
@@ -27,7 +27,7 @@ class VariantService {
   getAll(query: VariantQueryParams, isAdmin?: boolean): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, name, q } = query;
+        const { withDeleted, name, q, variant_values } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [variants, count] = await this.getRepository().findAndCount({
@@ -38,6 +38,9 @@ class VariantService {
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
+          relations: {
+            ...(variant_values ? { variantValues: true } : {}),
+          },
         });
         resolve({ data: { items: variants, count } });
       } catch (error) {

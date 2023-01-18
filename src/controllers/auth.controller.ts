@@ -1,26 +1,19 @@
 import { Response, Request } from "express";
 import {
   COOKIE_REFRESH_TOKEN_NAME,
+  COOKIE_REFRESH_TOKEN_OPTIONS,
+  MSG_ERROR,
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
+  STATUS_UNAUTH,
   __prod__,
 } from "../constants";
 import authService from "../services/auth.service";
 import userService from "../services/user.service";
 
 class AuthController {
-  writeRefreshTokenCookie(res: Response, refreshToken: string) {
-    res.cookie(COOKIE_REFRESH_TOKEN_NAME, refreshToken, {
-      maxAge: 1000 * 60 * 60 * 24 * 365,
-      httpOnly: true,
-      secure: __prod__,
-      sameSite: "lax",
-      domain: __prod__ ? ".vercel.app" : undefined,
-    });
-  }
-
   async register(req: Request, res: Response) {
     const { email } = req.body;
     const { data } = await userService.getByEmail(email);
@@ -35,7 +28,11 @@ class AuthController {
         const accessToken = authService.signAccessToken(payload);
         const refreshToken = authService.signRefreshToken(payload);
         const { password: _password, ...hidedPasswordUser } = data;
-        this.writeRefreshTokenCookie(res, refreshToken);
+        res.cookie(
+          COOKIE_REFRESH_TOKEN_NAME,
+          refreshToken,
+          COOKIE_REFRESH_TOKEN_OPTIONS
+        );
         return res.status(STATUS_CREATED).json({
           message: MSG_SUCCESS,
           data: { user: hidedPasswordUser, accessToken, refreshToken },
@@ -63,7 +60,11 @@ class AuthController {
         const accessToken = authService.signAccessToken(payload);
         const refreshToken = authService.signRefreshToken(payload);
         const { password: _password, ...hidedPasswordUser } = data;
-        this.writeRefreshTokenCookie(res, refreshToken);
+        res.cookie(
+          COOKIE_REFRESH_TOKEN_NAME,
+          refreshToken,
+          COOKIE_REFRESH_TOKEN_OPTIONS
+        );
         return res.status(STATUS_OK).json({
           message: MSG_SUCCESS,
           data: { user: hidedPasswordUser, accessToken, refreshToken },
@@ -75,18 +76,41 @@ class AuthController {
 
   async refreshToken(req: Request, res: Response) {
     try {
-      const token = req.cookies[COOKIE_REFRESH_TOKEN_NAME];
+      const token =
+        req.cookies[COOKIE_REFRESH_TOKEN_NAME] || req.body.refreshToken;
       if (token) {
-        const payload = authService.verifyRefreshToken(token);
-        const accessToken = authService.signAccessToken(payload);
-        return res.status(STATUS_OK).json({ data: { accessToken } });
+        const payload: any = authService.verifyRefreshToken(token);
+        const accessToken = authService.signAccessToken({
+          isAdmin: payload.isAdmin,
+          id: payload.id,
+        });
+        res.cookie("accessToken", accessToken, {
+          maxAge: 6000,
+        });
+        return res
+          .status(STATUS_OK)
+          .json({ data: { accessToken }, message: MSG_SUCCESS });
       }
       return res
         .status(STATUS_INTERVAL_ERROR)
         .json({ error: { message: "Token is invalid" } });
     } catch (error) {
+      console.log("REFRESH TOKEN ERROR", error);
       return res.status(STATUS_INTERVAL_ERROR).json({ error });
     }
+  }
+
+  async getProfile(req: Request, res: Response) {
+    if (!res.locals.user)
+      return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
+    const userId = +res.locals.user.id;
+    const { data, error } = await userService.getById(userId);
+
+    if (error) {
+      return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
+    }
+
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
 
   async changeProfile(req: Request, res: Response) {

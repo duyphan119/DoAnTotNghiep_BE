@@ -37,7 +37,7 @@ class ProductVariantController {
   }
   async createProductVariants(req: Request, res: Response) {
     const { error, data } = await productVariantService.createProductVariants(
-      req.body
+      req.body.inputs
     );
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
@@ -48,6 +48,15 @@ class ProductVariantController {
     const { error, data } = await productVariantService.updateProductVariant(
       +req.params.id,
       req.body
+    );
+    if (error) {
+      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    }
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+  }
+  async updateProductVariants(req: Request, res: Response) {
+    const { error, data } = await productVariantService.updateProductVariants(
+      req.body.inputs
     );
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);

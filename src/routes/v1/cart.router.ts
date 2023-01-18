@@ -1,16 +1,13 @@
 import { Router } from "express";
-import orderController from "../../controllers/order.controller";
-import {
-  requireIsAdmin,
-  requireLogin,
-} from "../../middlewares/auth.middleware";
+import cartController from "../../controllers/cart.controller";
+import { requireLogin } from "../../middlewares/auth.middleware";
 
-const orderRouter = Router();
+const cartRouter = Router();
 
-// orderRouter.get("/seed", groupProductController.seed);
-orderRouter.get("/:id", requireIsAdmin, orderController.getOrderById);
-orderRouter.get("/", requireIsAdmin, orderController.getAllOrders);
-orderRouter.patch("/checkout", requireLogin, orderController.checkout);
-orderRouter.patch("/status", requireIsAdmin, orderController.updateStatus);
+// cartRouter.get("/seed", groupProductController.seed);
+cartRouter.get("/user", requireLogin, cartController.getCartByUser);
+cartRouter.post("/", requireLogin, cartController.createCartItem);
+cartRouter.patch("/:id", requireLogin, cartController.updateCartItem);
+cartRouter.delete("/:id", requireLogin, cartController.deleteCartItem);
 
-export default orderRouter;
+export default cartRouter;

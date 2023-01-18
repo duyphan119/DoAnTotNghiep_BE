@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import CommentProduct from "./commentproduct.entity";
 import Order from "./order.entity";
 
 @Entity({ name: "taikhoan" })
@@ -48,25 +49,8 @@ class User {
 
   @OneToMany(() => Order, (e) => e.user)
   orders: Order[];
+
+  @OneToMany(() => CommentProduct, (e) => e.user)
+  commentProducts: CommentProduct[];
 }
 export default User;
-// @EventSubscriber()
-// export class UserSubscriber implements EntitySubscriberInterface<User> {
-// 	listenTo() {
-// 		return User;
-// 	}
-
-// 	async afterInsert(event: InsertEvent<User>) {
-// 		try {
-// 			if (!event.entity.isAdmin) {
-// 				const cartRepository = event.manager.getRepository(Cart);
-// 				const userRepository = event.manager.getRepository(User);
-// 				const cart = new Cart();
-// 				cart.userId = event.entity.id;
-// 				await cartRepository.save(cart);
-// 				event.entity.cart = cart;
-// 				await userRepository.save(event.entity);
-// 			}
-// 		} catch (error) {}
-// 	}
-// }

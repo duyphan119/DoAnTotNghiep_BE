@@ -1,3 +1,4 @@
+import { IsNull, Not } from "typeorm";
 import { AppDataSource } from "../data-source";
 import UserAddress from "../entities/useraddress.entity";
 import { handlePagination } from "../utils";
@@ -23,7 +24,13 @@ class UserAddressService {
       try {
         const { wherePagination } = handlePagination(query);
         const [groupProducts, count] = await this.getRepository().findAndCount({
-          where: { userId },
+          where: {
+            userId,
+            province: Not(IsNull()),
+            district: Not(IsNull()),
+            address: Not(IsNull()),
+            ward: Not(IsNull()),
+          },
           ...wherePagination,
         });
         resolve({ data: { items: groupProducts, count } });

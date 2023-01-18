@@ -17,6 +17,7 @@ type VariantValueQueryParams = QueryParams &
     slug: string;
     content: string;
     q: string;
+    variant: string;
   }>;
 
 type CreateVariantValueDTO = {
@@ -34,7 +35,7 @@ class VariantValueService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, title, slug, content, q } = query;
+        const { withDeleted, title, slug, content, q, variant } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [variantValues, count] = await this.getRepository().findAndCount({
@@ -47,6 +48,7 @@ class VariantValueService {
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
+          relations: { ...(variant ? { variant: true } : {}) },
         });
         resolve({ data: { items: variantValues, count } });
       } catch (error) {

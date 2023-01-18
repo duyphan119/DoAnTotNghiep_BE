@@ -17,10 +17,10 @@ class CartController {
     return res.status(STATUS_INTERVAL_ERROR).json(error);
   }
   async createCartItem(req: Request, res: Response) {
-    const { productVariantId, productId, quantity } = req.body;
+    const { productVariantId, quantity, price } = req.body;
     const userId = +res.locals.user.id;
     const { data: ordersData, error } = await orderService.getAllOrders(
-      {},
+      { items: "true" },
       true,
       false,
       userId
@@ -30,12 +30,15 @@ class CartController {
       const { data: newCart } = await orderService.createCart(userId);
       cart = newCart;
     }
+    if (ordersData.count > 0) cart = ordersData.items[0];
     if (cart) {
       const { data: newCartItem } = await orderItemService.createOrderItem({
-        ...(productVariantId ? { productVariantId } : {}),
-        productId,
+        // ...(productVariantId ? { productVariantId } : {}),
+        // productId,
         orderId: cart.id,
         quantity,
+        productVariantId,
+        price,
       });
       const { data, error } = await orderItemService.getById(
         newCartItem.id,

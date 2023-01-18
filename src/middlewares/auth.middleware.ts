@@ -15,7 +15,6 @@ export const getUser: any = (
           accessToken,
           process.env.AT_SECRET || "super-secret"
         );
-        console.log(user);
         res.locals.user = user || null;
       } catch (error) {
         console.log("ERROR", error);
@@ -66,9 +65,6 @@ export const requireIsUser: any = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log(
-    "---------------------------------Require is user ----------------------------"
-  );
   requireLogin(req, res, () => {
     if (!res.locals.user.isAdmin) {
       next();

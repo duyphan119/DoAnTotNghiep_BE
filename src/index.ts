@@ -4,36 +4,47 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import path from "path";
+import rootRouter from "./routes";
+import http from "http";
+import { Server } from "socket.io";
+
 import { __prod__ } from "./constants";
 import { AppDataSource } from "./data-source";
-import rootRouter from "./routes";
+import socketService from "./services/socket.service";
+
 require("dotenv").config();
-let PORT = "8080";
-if (process.env.PORT) {
-  PORT = process.env.PORT;
-}
+let PORT = process.env.PORT || "8080";
 
-const main = async () => {
-  const app = express();
-
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(cookieParser());
-  app.use(express.static(path.join(__dirname, "../")));
-  app.use(
-    cors({
-      origin: true,
-      credentials: true,
-    })
-  );
-  try {
-    const db = await AppDataSource.initialize();
+AppDataSource.initialize()
+  .then((db) => {
     console.log("CONNECT DB SUCCESSFULLY");
-    if (__prod__) await db.runMigrations();
-  } catch (error) {
-    console.log("CONNECT DB ERROR", error);
-  }
-  app.use(rootRouter);
-  app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
-};
-main();
+    if (__prod__) db.runMigrations();
+  })
+  .catch((error) => console.log("CONNECT DB ERROR", error))
+  .finally(() => {
+    const app = express();
+    const server = http.createServer(app);
+    const io = new Server(server, {
+      cors: {
+        origin: true,
+        credentials: true,
+      },
+    });
+    global._io = io;
+    io.on("connection", socketService.connection);
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(express.static(path.join(__dirname, "../")));
+    app.use(
+      cors({
+        origin: true,
+        credentials: true,
+        methods: ["GET", "POST", "PATCH", "DELETE"],
+      })
+    );
+    app.use(cookieParser());
+    app.use(rootRouter);
+    server.listen(PORT, () =>
+      console.log(`Server is running on port: ${PORT}`)
+    );
+  });

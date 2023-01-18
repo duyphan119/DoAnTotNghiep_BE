@@ -16,24 +16,25 @@ class FavoriteProductService {
       try {
         const { product_variants, images } = query;
         const { wherePagination } = handlePagination(query);
-        const favoriteProducts = await this.getRepository().find({
-          where: { userId },
-          ...wherePagination,
-          relations: {
-            product: {
-              ...(product_variants
-                ? {
-                    productVariants: {
-                      variantValues: { variant: true },
-                    },
-                  }
-                : {}),
-              ...(images ? { images: true } : {}),
-              groupProduct: true,
+        const [favoriteProducts, count] =
+          await this.getRepository().findAndCount({
+            where: { userId },
+            ...wherePagination,
+            relations: {
+              product: {
+                ...(product_variants
+                  ? {
+                      productVariants: {
+                        variantValues: { variant: true },
+                      },
+                    }
+                  : {}),
+                ...(images ? { images: true } : {}),
+                groupProduct: true,
+              },
             },
-          },
-        });
-        resolve({ data: favoriteProducts });
+          });
+        resolve({ data: { items: favoriteProducts, count } });
       } catch (error) {
         console.log("GET FAVORITE PRODUCTS BY USER ID ERROR", error);
         resolve({ error });

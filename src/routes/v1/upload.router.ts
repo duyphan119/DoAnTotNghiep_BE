@@ -4,8 +4,8 @@ import { promisify } from "util";
 import { getCloudinary } from "../../cloudinary";
 import { upload } from "../../middlewares/upload.middleware";
 import { generateFolder } from "../../utils";
-const router = Router();
-router.post(
+const uploadRouter = Router();
+uploadRouter.post(
   "/single",
   upload.single("image"),
   async (req: Request, res: Response) => {
@@ -18,6 +18,7 @@ router.post(
 
       console.log({ __dirname, path, filePath: req.file.path });
       console.log(path, req.file.path);
+      console.log("XÓA::::::::", path + "/" + req.file.path);
       await unlinkAsync(path + "/" + req.file.path);
       return res.status(201).json({ message: "Success", data: img });
     } else {
@@ -26,7 +27,7 @@ router.post(
   }
 );
 
-router.post(
+uploadRouter.post(
   "/multiple",
   upload.array("images"),
   async (req: Request, res: Response) => {
@@ -47,6 +48,8 @@ router.post(
               folder: "DoAnTotNghiep_BE/" + generateFolder(new Date()),
             })
           );
+          console.log("XÓA::::::::", path + "/" + filePath);
+
           promises.push(unlinkAsync(path + "/" + filePath));
         }
         const resultImgs = await Promise.all(promiseImgs);
@@ -61,4 +64,4 @@ router.post(
   }
 );
 
-export default router;
+export default uploadRouter;

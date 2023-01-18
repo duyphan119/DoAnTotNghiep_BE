@@ -3,12 +3,15 @@ import { Between, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
 import Product from "../entities/product.entity";
 import {
+  everageStar,
   handleILike,
   handlePagination,
   handleSearchILike,
   handleSort,
 } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
+import commentproductService from "./commentproduct.service";
+import productvariantService from "./productvariant.service";
 
 export type RelationQueryParams = Partial<{
   product_variants: string;
@@ -26,6 +29,7 @@ type ProductQueryParams = QueryParams &
     name: string;
     slug: string;
     group_product_slug: string;
+    group_product: string;
     v_ids: string;
     min_price: string;
     max_price: string;
@@ -86,6 +90,7 @@ class ProductService {
           slug,
           product_variants,
           images,
+          group_product,
           group_product_slug,
           min_price,
           max_price,
@@ -131,6 +136,7 @@ class ProductService {
               ? { productVariants: { variantValues: { variant: true } } }
               : {}),
             ...(images ? { images: true } : {}),
+            ...(group_product ? { groupProduct: true } : {}),
           },
         });
         if (product_variants) {
@@ -229,6 +235,25 @@ class ProductService {
     });
   }
 
+  updateStar(id: number): Promise<any> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { data } = await commentproductService.getAll({
+          productId: `${id}`,
+        });
+        if (data) {
+          const { items } = data;
+          const star = everageStar(items);
+          await this.updateProduct(id, { star });
+          resolve({});
+        }
+      } catch (error) {
+        console.log("UPDATE PRODUCT STAR ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
   softDeleteProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
@@ -256,7 +281,11 @@ class ProductService {
   deleteProduct(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.getRepository().delete({ id });
+        const product = await this.getRepository().findOneBy({ id });
+        if (product) {
+          await productvariantService.deleteProductVariantByProduct(product.id);
+          await this.getRepository().delete({ id });
+        }
         resolve({});
       } catch (error) {
         console.log("DELETE PRODUCT ERROR", error);

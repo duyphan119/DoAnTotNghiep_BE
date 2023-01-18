@@ -5,6 +5,7 @@ import { handlePagination, handleSort } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 import orderitemService from "./orderitem.service";
 import userService from "./user.service";
+import userAddressService from "./useraddress.service";
 
 type OrderQueryParams = QueryParams &
   Partial<{
@@ -49,8 +50,10 @@ class OrderService {
             ...(items
               ? {
                   items: {
-                    product: { images: true },
-                    productVariant: { variantValues: true },
+                    productVariant: {
+                      variantValues: { variant: true },
+                      product: { images: true },
+                    },
                   },
                 }
               : {}),
@@ -75,8 +78,10 @@ class OrderService {
           where: { id },
           relations: {
             items: {
-              product: { images: true },
-              productVariant: { variantValues: true },
+              productVariant: {
+                variantValues: true,
+                product: { images: true },
+              },
             },
             discount: true,
           },
@@ -92,11 +97,24 @@ class OrderService {
     return new Promise(async (resolve, _) => {
       try {
         const { data: user } = await userService.getById(userId);
+        const { data: userAddressData } = await userAddressService.getByUserId(
+          userId,
+          { limit: "1" }
+        );
         if (user) {
+          const userAddress = userAddressData?.items[0];
           const cart = await this.getRepository().save({
             userId,
             fullName: user.fullName,
             phone: user.phone,
+            ...(userAddress
+              ? {
+                  province: userAddress.province,
+                  district: userAddress.district,
+                  ward: userAddress.ward,
+                  address: userAddress.address,
+                }
+              : {}),
           });
           resolve({ data: cart });
         }
@@ -127,6 +145,23 @@ class OrderService {
             ...dto,
             status: "Đang xử lý",
           });
+          const { userId } = order;
+          const { province, district, ward, address } = dto;
+          const userAddress = await userAddressService.getByDTO(userId, {
+            province,
+            district,
+            ward,
+            address,
+          });
+
+          if (!userAddress) {
+            await userAddressService.createUserAddress(userId, {
+              province,
+              district,
+              ward,
+              address,
+            });
+          }
 
           resolve({ data: newOrder });
         }

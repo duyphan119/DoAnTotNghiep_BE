@@ -25,9 +25,9 @@ class OrderItem {
   @IsNumber()
   orderId: number;
 
-  @Column({ nullable: false, name: "mahang" })
-  @IsNumber()
-  productId: number;
+  // @Column({ nullable: false, name: "mahang" })
+  // @IsNumber()
+  // productId: number;
 
   @Column({ nullable: true, name: "mahangbienthe" })
   @IsNumber()
@@ -48,9 +48,9 @@ class OrderItem {
   @UpdateDateColumn({ name: "ngaycapnhat" })
   updatedAt: Date;
 
-  @ManyToOne(() => Product, (e) => e.items)
-  @JoinColumn({ name: "mahang", referencedColumnName: "id" })
-  product: Product;
+  // @ManyToOne(() => Product, (e) => e.items)
+  // @JoinColumn({ name: "mahang", referencedColumnName: "id" })
+  // product: Product;
 
   @ManyToOne(() => ProductVariant, (e) => e.items)
   @JoinColumn({ name: "mahangbienthe", referencedColumnName: "id" })

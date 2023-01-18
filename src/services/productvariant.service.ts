@@ -1,5 +1,6 @@
 import { AppDataSource } from "../data-source";
 import ProductVariant from "../entities/productvariant.entity";
+import VariantValue from "../entities/variantvalue.entity";
 import { handlePagination, handleSort } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 
@@ -13,6 +14,8 @@ export type CreateProductVariantDTO = {
   productId: number;
   price: number;
   inventory: number;
+  name: string;
+  variantValues: VariantValue[];
 };
 
 class ProductVariantService {
@@ -103,6 +106,21 @@ class ProductVariantService {
       }
     });
   }
+  updateProductVariants(
+    dto: Array<Partial<ProductVariant>>
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await Promise.all(
+          dto.map((input) => this.updateProductVariant(input.id || -1, input))
+        );
+        resolve({});
+      } catch (error) {
+        console.log("UPDATE PRODUCT VARIANTS ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
 
   updateProductVariant(
     id: number,
@@ -159,6 +177,18 @@ class ProductVariantService {
         resolve({});
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
+  deleteProductVariantByProduct(productId: number): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete({ productId });
+        resolve({});
+      } catch (error) {
+        console.log("DELETE PRODUCT VARIANT BY PRODUCT ERROR", error);
         resolve({ error });
       }
     });

@@ -214,7 +214,7 @@ class UserService {
         }
         resolve({ data: { items: [] } });
       } catch (error) {
-        console.log("CREATE SEED USERs ERROR", error);
+        console.log("CREATE SEED USERS ERROR", error);
         resolve({ error });
       }
     });

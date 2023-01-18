@@ -1,5 +1,6 @@
-import { PaginationParams, SortParams } from "./types";
 import { ILike } from "typeorm";
+import CommentProduct from "../entities/commentproduct.entity";
+import { PaginationParams, SortParams } from "./types";
 
 export const generateFolder = (date: Date) => {
   const year = date.getFullYear().toString().substring(2);
@@ -50,44 +51,42 @@ export const handleSearchILike = (keys: string[], q?: string) => {
 
   return obj;
 };
+export const handleSearchEqual = (
+  keys: string[],
+  q?: string,
+  isNumber?: boolean
+) => {
+  if (!q) return {};
 
-// export const handleError = (error: any): ResponseData => {
-//   console.log(error);
-//   return {
-//     status: 500,
-//     data: {
-//       code: 500,
-//       message: "Error",
-//       data: {
-//         error,
-//       },
-//     },
-//   };
-// };
-// export const handleItems = (
-//   status: number,
-//   items: any[],
-//   count: number,
-//   limit: number
-// ): ResponseData => {
-//   return {
-//     status,
-//     data: {
-//       code: 200,
-//       message: "Success",
-//       data: {
-//         items,
-//         count,
-//         totalPage: Math.ceil(count / limit),
-//       },
-//     },
-//   };
-// };
-// export const handleItem = (status: number, item?: any): ResponseData => {
-//   return {
-//     status,
-//     ...(item
-//       ? { data: { data: item, code: status, message: "Success" } }
-//       : { data: { code: status, message: "Success" } }),
-//   };
-// };
+  let obj: any = {};
+
+  keys.forEach((key) => {
+    obj[key] = isNumber ? +q : q;
+  });
+
+  return obj;
+};
+
+export const handleEqual = (key: string, value?: any, isNumber?: boolean) => {
+  return value ? { [key]: isNumber ? +value : value } : {};
+};
+
+export const everageStar = (items: CommentProduct[]) => {
+  const count = items.length;
+  if (count === 0) return 0;
+  const totalStar = items.reduce((prev, cur) => prev + cur.star, 0);
+  return parseFloat((totalStar / count).toFixed(1));
+};
+
+export const handleRelationDepth = (key: string, depth: number) => {
+  let relations: any = {};
+  let temp: any = relations;
+
+  for (let i = 0; i < depth; i++) {
+    temp[key] = i === depth - 1 ? true : {};
+
+    temp = temp[key];
+  }
+
+  return relations;
+};

@@ -14,10 +14,10 @@ class FavoriteProductController {
       +res.locals.user.id,
       req.query
     );
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    if (error) {
+      return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
-    return res.status(STATUS_INTERVAL_ERROR).json(error);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async createFavoriteProduct(req: Request, res: Response) {
     const { error, data } = await favoriteproductService.createFavoriteProduct(

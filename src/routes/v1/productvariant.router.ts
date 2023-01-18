@@ -22,6 +22,11 @@ productVariantRouter.post(
   productvariantController.createProductVariant
 );
 productVariantRouter.patch(
+  "/many",
+  requireIsAdmin,
+  productvariantController.updateProductVariants
+);
+productVariantRouter.patch(
   "/:id",
   requireIsAdmin,
   productvariantController.updateProductVariant

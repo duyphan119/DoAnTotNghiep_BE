@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  MSG_ERROR,
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_INTERVAL_ERROR,
@@ -10,12 +11,18 @@ import userAddressService from "../services/useraddress.service";
 
 class GroupProductController {
   async getByUserId(req: Request, res: Response) {
+    if (!res.locals.user)
+      return res
+        .status(STATUS_OK)
+        .json({ data: { items: [], count: 0 }, message: MSG_ERROR });
     const { error, data } = await userAddressService.getByUserId(
       +res.locals.user.id,
       req.query
     );
     if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
+      return res
+        .status(STATUS_OK)
+        .json({ data: { items: [], count: 0 }, message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }

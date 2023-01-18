@@ -1,9 +1,10 @@
 import { Router } from "express";
 import authController from "../../controllers/auth.controller";
-import { requireLogin } from "../../middlewares/auth.middleware";
+import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 
 const authRouter = Router();
 
+authRouter.get("/profile", getUser, authController.getProfile);
 authRouter.post("/login", authController.login);
 authRouter.post("/register", authController.register);
 authRouter.delete("/logout", authController.logout);

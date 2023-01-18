@@ -14,6 +14,7 @@ class GroupProductController {
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
+    _io.emit("test", data);
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getById(req: Request, res: Response) {
