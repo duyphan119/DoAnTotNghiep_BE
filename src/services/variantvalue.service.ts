@@ -104,36 +104,36 @@ class VariantValueService {
       }
     });
   }
-  softDeleteVariantValue(id: number): Promise<ResponseData> {
+  softDeleteVariantValue(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE VARIANT VALUE ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  restoreVariantValue(id: number): Promise<ResponseData> {
+  restoreVariantValue(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE VARIANT VALUE ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  deleteVariantValue(id: number): Promise<ResponseData> {
+  deleteVariantValue(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE VARIANT VALUE ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }

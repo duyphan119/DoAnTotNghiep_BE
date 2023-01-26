@@ -1,7 +1,7 @@
 import { AppDataSource } from "../data-source";
 import OrderItem from "../entities/orderitem.entity";
-import { ResponseData } from "../utils/types";
 import ProductVariant from "../entities/productvariant.entity";
+import { ResponseData } from "../utils/types";
 import productVariantService from "./productvariant.service";
 
 export type CreateOrderItemDTO = {
@@ -14,6 +14,7 @@ class OrderItemService {
   getRepository() {
     return AppDataSource.getRepository(OrderItem);
   }
+
   getById(id: number, relations?: boolean): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
@@ -30,6 +31,7 @@ class OrderItemService {
                       images: true,
                     },
                   },
+                  order: true,
                 },
               }
             : {}),

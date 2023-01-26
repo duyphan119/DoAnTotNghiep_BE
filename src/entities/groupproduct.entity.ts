@@ -1,4 +1,4 @@
-import { IsNumber, IsString, Length } from "class-validator";
+import { IsBoolean, IsNumber, IsString, Length } from "class-validator";
 import {
   BaseEntity,
   Column,
@@ -11,6 +11,11 @@ import {
 } from "typeorm";
 import Product from "./product.entity";
 // import { Product } from "./product.entity";
+export enum GroupProductSexEnum {
+  MALE = "Nam",
+  FEMALE = "Nữ",
+  UNISEX = "Unisex",
+}
 
 @Entity({ name: "nhomsanpham" })
 class GroupProduct {
@@ -28,6 +33,20 @@ class GroupProduct {
   @Column({ nullable: true, name: "hinhanh" })
   @IsString()
   thumbnail: string;
+
+  @Column({
+    nullable: true,
+    name: "gioitinh",
+    type: "enum",
+    enum: GroupProductSexEnum,
+    default: GroupProductSexEnum.MALE,
+  })
+  @IsString()
+  sex: string;
+
+  @Column({ name: "nguoilon", default: true })
+  @IsBoolean()
+  isAdult: boolean;
 
   @Column({ nullable: true, name: "mota" })
   @IsString()

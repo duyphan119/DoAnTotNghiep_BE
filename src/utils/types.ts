@@ -20,3 +20,4 @@ export type ParsedQueryParams = Partial<{
   limit: number;
   select: string;
 }>;
+export type Sex = "Nam" | "Nữ" | "Unisex";

@@ -90,3 +90,12 @@ export const handleRelationDepth = (key: string, depth: number) => {
 
   return relations;
 };
+export const lastDay = (month: number, year: number) => {
+  if (year % 4 === 0 && month === 2) return 29;
+
+  if (month === 2) return 28;
+
+  if ([1, 3, 5, 7, 8, 10, 12].includes(month)) return 31;
+
+  return 30;
+};

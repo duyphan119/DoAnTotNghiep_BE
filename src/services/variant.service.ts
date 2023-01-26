@@ -92,36 +92,36 @@ class VariantService {
       }
     });
   }
-  softDeleteVariant(id: number): Promise<ResponseData> {
+  softDeleteVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  restoreVariant(id: number): Promise<ResponseData> {
+  restoreVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  deleteVariant(id: number): Promise<ResponseData> {
+  deleteVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }

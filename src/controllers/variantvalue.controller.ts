@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  MSG_ERROR,
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_INTERVAL_ERROR,
@@ -43,29 +44,27 @@ class VariantValueController {
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async deleteVariantValue(req: Request, res: Response) {
-    const { error } = await variantValueService.deleteVariantValue(
-      +req.params.id
-    );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    const result = await variantValueService.deleteVariantValue(+req.params.id);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async softDeleteVariantValue(req: Request, res: Response) {
-    const { error } = await variantValueService.softDeleteVariantValue(
+    const result = await variantValueService.softDeleteVariantValue(
       +req.params.id
     );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async restoreVariantValue(req: Request, res: Response) {
-    const { error } = await variantValueService.restoreVariantValue(
+    const result = await variantValueService.restoreVariantValue(
       +req.params.id
     );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }

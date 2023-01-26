@@ -1,23 +1,32 @@
-import { IsNumber, IsString, Length } from "class-validator";
+import {
+  IsBoolean,
+  IsDate,
+  IsNumber,
+  IsString,
+  Length,
+  Min,
+} from "class-validator";
 import {
   Column,
   CreateDateColumn,
   Entity,
-  EntitySubscriberInterface,
-  EventSubscriber,
-  InsertEvent,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  UpdateEvent,
 } from "typeorm";
-import orderService from "../services/order.service";
-import userAddressService from "../services/useraddress.service";
 import OrderDiscount from "./orderdiscount.entity";
 import OrderItem from "./orderitem.entity";
 import User from "./user.entity";
+
+export enum OrderStatusEnum {
+  PENDING = "Đang xử lý",
+  DELIVERING = "Đang giao hàng",
+  CANCELED = "Đã hủy",
+  DELIVERED = "Đã giao",
+  INCART = "Giỏ hàng",
+}
 
 @Entity({ name: "donhang" })
 class Order {
@@ -49,7 +58,13 @@ class Order {
   @IsString()
   address: string;
 
-  @Column({ nullable: true, name: "trangthaidonhang" })
+  @Column({
+    nullable: true,
+    name: "trangthaidonhang",
+    type: "enum",
+    enum: OrderStatusEnum,
+    default: OrderStatusEnum.INCART,
+  })
   @IsString()
   status: string;
 
@@ -67,6 +82,27 @@ class Order {
   @Column({ nullable: true, name: "ghichu" })
   @IsString()
   note: string;
+
+  @Column({ nullable: true, name: "diem", default: 0 })
+  @IsNumber()
+  @Min(0)
+  point: number;
+
+  @Column({ nullable: true, default: false, name: "dadathang" })
+  @IsBoolean()
+  isOrdered: boolean;
+
+  @Column({ nullable: true, default: true, name: "chophephuy" })
+  @IsBoolean()
+  allowCannceled: boolean;
+
+  @Column({ nullable: true, default: false, name: "dathanhtoan" })
+  @IsBoolean()
+  isPaid: boolean;
+
+  @Column({ nullable: true, name: "ngaydat" })
+  @IsDate()
+  orderDate: Date;
 
   @Column({ nullable: false, name: "matk" })
   @IsNumber()

@@ -1,6 +1,7 @@
 import slugify from "slugify";
-import { Between, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
+import { Between, ILike, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
+import GroupProduct from "../entities/groupproduct.entity";
 import Product from "../entities/product.entity";
 import {
   everageStar,
@@ -11,6 +12,8 @@ import {
 } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 import commentproductService from "./commentproduct.service";
+import groupproductService from "./groupproduct.service";
+import orderItemService from "./orderitem.service";
 import productvariantService from "./productvariant.service";
 
 export type RelationQueryParams = Partial<{
@@ -46,6 +49,14 @@ type CreateProductDTO = {
   detail: string;
   description: string;
 }>;
+
+export type BestSellerProduct = {
+  productId: number;
+  productName: string;
+  thumbnail: string;
+  inventory: number;
+  total: number;
+};
 
 class ProductService {
   getRepository() {
@@ -106,7 +117,9 @@ class ProductService {
             ...handleILike("slug", slug),
             ...handleSearchILike(["name", "slug"], q),
             ...(group_product_slug
-              ? { groupProduct: { slug: group_product_slug } }
+              ? {
+                  groupProduct: handleILike("slug", group_product_slug),
+                }
               : {}),
             ...(min_price && !max_price
               ? { productVariants: { price: MoreThanOrEqual(+min_price) } }
@@ -173,6 +186,35 @@ class ProductService {
       } catch (error) {
         console.log("UPDATE PRODUCT ERROR", error);
         resolve({ error });
+      }
+    });
+  }
+
+  bestSellers(): Promise<BestSellerProduct[]> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const items = await orderItemService
+          .getRepository()
+          .createQueryBuilder("ctdh")
+          .leftJoin("ctdh.productVariant", "mhbt")
+          .leftJoin("mhbt.product", "mh")
+          .leftJoin("ctdh.order", "dh")
+          .groupBy("mh.mahang")
+          .select("sum(ctdh.soluong)", "total")
+          .addSelect("mh.mahang", "productId")
+          .addSelect("mh.tenhang", "productName")
+          .addSelect("mh.hinhanh", "thumbnail")
+          .addSelect("mh.solongton", "inventory")
+          .where("dh.dathanhtoan = :isPaid", { isPaid: true })
+          .orderBy("sum(ctdh.soluong)", "DESC")
+          .getRawMany();
+
+        resolve(
+          items.splice(0, 10).map((item) => ({ ...item, total: +item.total }))
+        );
+      } catch (error) {
+        console.log("BEST SELLERS ERROR", error);
+        resolve([]);
       }
     });
   }

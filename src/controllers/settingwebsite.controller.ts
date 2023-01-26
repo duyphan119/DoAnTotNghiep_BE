@@ -7,32 +7,41 @@ import {
   STATUS_OK,
   STATUS_UNAUTH,
 } from "../constants";
-import variantService from "../services/variant.service";
+import settingWebsiteService from "../services/settingwebsite.service";
 
-class VariantController {
+class SettingWebsiteController {
   async getAll(req: Request, res: Response) {
-    const { error, data } = await variantService.getAll(req.query);
+    const { error, data } = await settingWebsiteService.getAll(req.query);
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getById(req: Request, res: Response) {
-    const { error, data } = await variantService.getById(+req.params.id);
+    const { error, data } = await settingWebsiteService.getById(+req.params.id);
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
-  async createVariant(req: Request, res: Response) {
-    const { error, data } = await variantService.createVariant(req.body);
+  async getByKeys(req: Request, res: Response) {
+    const { error, data } = await settingWebsiteService.getByKeys(
+      req.body.keys
+    );
+    if (error) {
+      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    }
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+  }
+  async createOne(req: Request, res: Response) {
+    const { error, data } = await settingWebsiteService.createOne(req.body);
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
     return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   }
-  async updateVariant(req: Request, res: Response) {
-    const { error, data } = await variantService.updateVariant(
+  async updateOne(req: Request, res: Response) {
+    const { error, data } = await settingWebsiteService.updateOne(
       +req.params.id,
       req.body
     );
@@ -41,29 +50,15 @@ class VariantController {
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
-  async deleteVariant(req: Request, res: Response) {
-    const result = await variantService.deleteVariant(+req.params.id);
-    if (!result) {
-      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
-    }
-    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
-  }
-  async softDeleteVariant(req: Request, res: Response) {
-    const result = await variantService.softDeleteVariant(+req.params.id);
-    if (!result) {
-      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
-    }
-    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
-  }
-  async restoreVariant(req: Request, res: Response) {
-    const result = await variantService.restoreVariant(+req.params.id);
+  async deleteOne(req: Request, res: Response) {
+    const result = await settingWebsiteService.deleteOne(+req.params.id);
     if (!result) {
       return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async seed(req: Request, res: Response) {
-    const { error, data } = await variantService.seed();
+    const { error, data } = await settingWebsiteService.seed();
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }
@@ -71,4 +66,4 @@ class VariantController {
   }
 }
 
-export default new VariantController();
+export default new SettingWebsiteController();

@@ -12,6 +12,6 @@ orderRouter.get("/user", requireLogin, orderController.getOrdersUser);
 orderRouter.get("/:id", requireIsAdmin, orderController.getOrderById);
 orderRouter.get("/", requireIsAdmin, orderController.getAllOrders);
 orderRouter.patch("/checkout", requireLogin, orderController.checkout);
-orderRouter.patch("/status", requireIsAdmin, orderController.updateStatus);
+orderRouter.patch("/:id/status", requireIsAdmin, orderController.updateStatus);
 
 export default orderRouter;

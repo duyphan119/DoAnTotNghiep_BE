@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 
 class SocketService {
   connection(socket: Socket<any>) {
-    console.log(`${socket.id} connect`);
+    // console.log(`${socket.id} connect`);
     socket.join("APP");
     // on events
     socket.on("disconnect", () => {

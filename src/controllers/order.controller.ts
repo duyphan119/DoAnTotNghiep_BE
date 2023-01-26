@@ -40,11 +40,9 @@ class OrderController {
     }
     return res.status(STATUS_INTERVAL_ERROR).json(error);
   }
+
   async updateStatus(req: Request, res: Response) {
-    const { data, error } = await orderService.updateStatus(
-      +req.params.id,
-      req.body.status
-    );
+    const { data, error } = await orderService.updateStatus(+req.params.id);
     if (data) {
       return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
     }
@@ -53,6 +51,7 @@ class OrderController {
   async checkout(req: Request, res: Response) {
     const userId = +res.locals.user.id;
     const { data, error } = await orderService.checkout(userId, req.body);
+
     if (data) {
       const { data: data2 } = await notifyService.createOne(userId, {
         message: "Bạn có đơn hàng mới",
@@ -65,6 +64,7 @@ class OrderController {
 
       return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
     }
+
     return res.status(STATUS_INTERVAL_ERROR).json(error);
   }
 }

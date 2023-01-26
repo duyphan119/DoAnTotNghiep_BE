@@ -1,4 +1,5 @@
 import * as bcrypt from "bcrypt";
+import { Between, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
 import User from "../entities/user.entity";
 import {
@@ -6,6 +7,7 @@ import {
   handlePagination,
   handleSearchILike,
   handleSort,
+  lastDay,
 } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 
@@ -44,6 +46,38 @@ class UserService {
         resolve(bcrypt.compare(password, hash));
       } catch (error) {
         reject(error);
+      }
+    });
+  }
+  updatePoint(id: number, point: number): Promise<User | null> {
+    return new Promise(async (resolve, __) => {
+      try {
+        const user = await this.getRepository().findOneBy({ id });
+        if (user) {
+          user.point += point;
+          resolve(await this.getRepository().save(user));
+        }
+      } catch (error) {
+        console.log("UPDATE USER POINT ERROR", error);
+      }
+      resolve(null);
+    });
+  }
+  countUserByMonth(year: number, month: number): Promise<number> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const count = await this.getRepository().count({
+          where: {
+            createdAt: Between(
+              new Date(`${year}-${month}-01`),
+              new Date(`${year}-${month}-${lastDay(month, year)}`)
+            ),
+          },
+        });
+
+        resolve(count);
+      } catch (error) {
+        resolve(0);
       }
     });
   }

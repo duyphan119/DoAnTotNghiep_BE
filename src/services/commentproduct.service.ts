@@ -1,4 +1,4 @@
-import { Not } from "typeorm";
+import { Between, Not } from "typeorm";
 import { AppDataSource } from "../data-source";
 import CommentProduct from "../entities/commentproduct.entity";
 import {
@@ -9,6 +9,7 @@ import {
   handleSearchEqual,
   handleSearchILike,
   handleSort,
+  lastDay,
 } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 import productService from "./product.service";
@@ -53,6 +54,24 @@ class CommentProductService {
       } catch (error) {
         console.log("CHECK USER COMMENT PRODUCT ERROR", error);
         resolve(null);
+      }
+    });
+  }
+  countCommentProductByMonth(year: number, month: number): Promise<number> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const count = await this.getRepository().count({
+          where: {
+            createdAt: Between(
+              new Date(`${year}-${month}-01`),
+              new Date(`${year}-${month}-${lastDay(month, year)}`)
+            ),
+          },
+        });
+
+        resolve(count);
+      } catch (error) {
+        resolve(0);
       }
     });
   }
