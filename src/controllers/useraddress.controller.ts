@@ -6,7 +6,7 @@ import {
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
   STATUS_UNAUTH,
-} from "../constants";
+} from "../constantList";
 import userAddressService from "../services/useraddress.service";
 
 class GroupProductController {

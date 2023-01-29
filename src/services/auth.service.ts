@@ -1,5 +1,4 @@
 import * as jwt from "jsonwebtoken";
-import { __prod__ } from "../constants";
 class AuthService {
   signAccessToken(obj: any, expiresIn?: number) {
     return jwt.sign(obj, process.env.AT_SECRET as string, {

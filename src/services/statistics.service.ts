@@ -1,6 +1,5 @@
 import { AppDataSource } from "../data-source";
 import Order from "../entities/order.entity";
-import User from "../entities/user.entity";
 import commentProductService from "./commentproduct.service";
 import orderService from "./order.service";
 import productService, { BestSellerProduct } from "./product.service";

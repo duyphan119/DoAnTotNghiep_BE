@@ -4,7 +4,7 @@ import {
   MSG_SUCCESS,
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
-} from "../constants";
+} from "../constantList";
 import statisticsService from "../services/statistics.service";
 
 class StatisticsController {

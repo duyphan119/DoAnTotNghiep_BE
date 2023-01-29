@@ -1,19 +1,14 @@
 import { IsNumber, Min } from "class-validator";
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  EntitySubscriberInterface,
-  EventSubscriber,
-  InsertEvent,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import Order from "./order.entity";
-import Product from "./product.entity";
 import ProductVariant from "./productvariant.entity";
 
 @Entity({ name: "chitietdonhang" })

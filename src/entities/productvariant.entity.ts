@@ -1,6 +1,7 @@
 import { IsNumber, IsString } from "class-validator";
+import productService from "../services/product.service";
+import productVariantService from "../services/productvariant.service";
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -16,9 +17,6 @@ import {
   UpdateDateColumn,
   UpdateEvent,
 } from "typeorm";
-import { AppDataSource } from "../data-source";
-import productService from "../services/product.service";
-import productVariantService from "../services/productvariant.service";
 import OrderItem from "./orderitem.entity";
 import Product from "./product.entity";
 import VariantValue from "./variantvalue.entity";

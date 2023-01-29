@@ -1,8 +1,6 @@
-import slugify from "slugify";
-import { Between, ILike, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
-import GroupProduct from "../entities/groupproduct.entity";
-import Product from "../entities/product.entity";
+import slugify from "slugify";
+import { Between, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import {
   everageStar,
   handleILike,
@@ -10,9 +8,9 @@ import {
   handleSearchILike,
   handleSort,
 } from "../utils";
+import Product from "../entities/product.entity";
 import { QueryParams, ResponseData } from "../utils/types";
 import commentproductService from "./commentproduct.service";
-import groupproductService from "./groupproduct.service";
 import orderItemService from "./orderitem.service";
 import productvariantService from "./productvariant.service";
 

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { MSG_SUCCESS, STATUS_INTERVAL_ERROR, STATUS_OK } from "../constants";
+import { MSG_SUCCESS, STATUS_INTERVAL_ERROR, STATUS_OK } from "../constantList";
 import orderService from "../services/order.service";
 import orderItemService from "../services/orderitem.service";
 

@@ -6,7 +6,7 @@ import {
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
   STATUS_UNAUTH,
-} from "../constants";
+} from "../constantList";
 import variantValueService from "../services/variantvalue.service";
 
 class VariantValueController {

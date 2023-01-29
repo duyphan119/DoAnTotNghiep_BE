@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { MSG_ERROR, MSG_SUCCESS, STATUS_OK } from "../constants";
+import { MSG_ERROR, MSG_SUCCESS, STATUS_OK } from "../constantList";
 import orderDiscountService from "../services/orderdiscount.service";
 
 class OrderDiscountController {

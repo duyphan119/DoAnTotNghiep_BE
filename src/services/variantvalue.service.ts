@@ -1,14 +1,12 @@
 import { AppDataSource } from "../data-source";
 import VariantValue from "../entities/variantvalue.entity";
-import { QueryParams, ResponseData } from "../utils/types";
 import {
-  handleSort,
-  handlePagination,
   handleILike,
+  handlePagination,
   handleSearchILike,
+  handleSort,
 } from "../utils";
-import slugify from "slugify";
-import Variant from "../entities/variant.entity";
+import { QueryParams, ResponseData } from "../utils/types";
 import variantService from "./variant.service";
 
 type VariantValueQueryParams = QueryParams &

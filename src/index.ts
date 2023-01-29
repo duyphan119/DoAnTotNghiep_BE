@@ -8,7 +8,7 @@ import rootRouter from "./routes";
 import http from "http";
 import { Server } from "socket.io";
 
-import { __prod__ } from "./constants";
+import { __prod__ } from "./constantList";
 import { AppDataSource } from "./data-source";
 import socketService from "./services/socket.service";
 
@@ -34,7 +34,7 @@ AppDataSource.initialize()
     io.on("connection", socketService.connection);
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(express.static(path.join(__dirname, "../")));
+    app.use(express.static(path.join(__dirname, "")));
     app.use(
       cors({
         origin: true,

@@ -76,6 +76,23 @@ class CommentProductService {
     });
   }
 
+  getById(id: number): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const item = await this.getRepository().findOne({
+          where: { id },
+          relations: {
+            user: true,
+          },
+        });
+        resolve({ data: item });
+      } catch (error) {
+        console.log("GET COMMENT PRODUCT BY ID ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
   getAll(
     query: CommentProductQueryParams,
     userId?: number
@@ -130,7 +147,8 @@ class CommentProductService {
           item = await this.getRepository().save({ ...item, ...dto });
         }
         await productService.updateStar(dto.productId);
-        resolve({ data: item });
+        const { data: newItem } = await this.getById(item.id);
+        resolve({ data: newItem });
       } catch (error) {
         console.log("CREATE COMMENT PRODUCT ERROR", error);
         resolve({ error });
@@ -147,10 +165,11 @@ class CommentProductService {
       try {
         const item = await this.getRepository().findOneBy({ id });
         if (item && item.userId === userId) {
-          const newItem = await this.getRepository().save({ ...item, ...dto });
+          await this.getRepository().save({ ...item, ...dto });
           if (dto.star) {
             await productService.updateStar(item.productId);
           }
+          const { data: newItem } = await this.getById(item.id);
           resolve({ data: newItem });
         }
         resolve({});

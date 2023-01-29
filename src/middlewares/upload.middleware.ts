@@ -2,8 +2,6 @@ import { Request } from "express";
 import { mkdirSync } from "fs";
 import multer from "multer";
 import { extname } from "path";
-import { BASE_ASSETS_IMAGES } from "../constants";
-import { generateFolder } from "../utils";
 type DestinationCallback = (error: Error | null, destination: string) => void;
 type FileNameCallback = (error: Error | null, filename: string) => void;
 const storage = multer.diskStorage({

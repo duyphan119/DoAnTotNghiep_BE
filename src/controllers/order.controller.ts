@@ -4,7 +4,7 @@ import {
   MSG_SUCCESS,
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
-} from "../constants";
+} from "../constantList";
 import { NotifyTypeEnum } from "../entities/notify.entity";
 import notifyService from "../services/notify.service";
 import orderService from "../services/order.service";

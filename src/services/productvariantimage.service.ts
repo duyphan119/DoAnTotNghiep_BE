@@ -2,7 +2,7 @@ import { AppDataSource } from "../data-source";
 import { handlePagination, handleSort } from "../utils";
 import { QueryParams, ResponseData } from "../utils/types";
 import ProductVariantImage from "../entities/productvariantimage.entity";
-import { getCloudinary } from "../cloudinary";
+import { getCloudinary } from "../configCloudinary";
 
 export type ProductVariantImageQueryParams = QueryParams &
   Partial<{

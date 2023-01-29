@@ -1,10 +1,6 @@
 import { Router } from "express";
 import userAddressController from "../../controllers/useraddress.controller";
-import {
-  getUser,
-  requireIsAdmin,
-  requireLogin,
-} from "../../middlewares/auth.middleware";
+import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 
 const userAddressRouter = Router();
 

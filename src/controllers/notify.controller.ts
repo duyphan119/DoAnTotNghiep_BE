@@ -4,7 +4,7 @@ import {
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_OK,
-} from "../constants";
+} from "../constantList";
 import notifyService from "../services/notify.service";
 
 class NotifyController {

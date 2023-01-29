@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import * as fs from "fs";
 import { promisify } from "util";
-import { getCloudinary } from "../../cloudinary";
+import { getCloudinary } from "../../configCloudinary";
 import { upload } from "../../middlewares/upload.middleware";
 import { generateFolder } from "../../utils";
 const uploadRouter = Router();

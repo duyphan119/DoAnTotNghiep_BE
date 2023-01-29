@@ -5,7 +5,7 @@ import {
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
   STATUS_UNAUTH,
-} from "../constants";
+} from "../constantList";
 import productService from "../services/product.service";
 
 class ProductController {
