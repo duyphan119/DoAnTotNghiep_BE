@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
         username: process.env.DB_USERNAME_DEV || "postgres",
         password: process.env.DB_PASSWORD_DEV || "duychomap710",
         database: "DoAnTotNghiep",
-        synchronize: true,
+        synchronize: false,
       }),
   logging: true,
   entities: [path.join(__dirname, "/entities/*")],
