@@ -28,7 +28,7 @@ class User {
   @IsString()
   password: string;
 
-  @Column({ nullable: false, length: 10, name: "sdt" })
+  @Column({ nullable: true, length: 10, name: "sdt" })
   @IsString()
   phone: string;
 

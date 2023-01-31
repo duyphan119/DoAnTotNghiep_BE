@@ -1,6 +1,6 @@
 import { CookieOptions } from "express";
 
-export const __prod__ = process.env.NODE_ENV === "production";
+export const __prod__ = process.env.NODE__ENV === "production";
 export const COOKIE_REFRESH_TOKEN_NAME = "RT";
 export const COOKIE_RESET_CODE_NAME = "RT";
 export const BASE_ASSETS_IMAGES = "assets/images/";
