@@ -37,9 +37,7 @@ AppDataSource.initialize()
     app.use(express.static(path.join(__dirname, "")));
     app.use(
       cors({
-        origin: __prod__
-          ? process.env.CORS_ORIGIN_PROD
-          : process.env.CORS_ORIGIN_DEV,
+        origin: "*",
         credentials: true,
         methods: ["GET", "POST", "PATCH", "DELETE"],
       })
