@@ -125,7 +125,7 @@ class AuthController {
 
   logout(req: Request, res: Response) {
     res.clearCookie(COOKIE_REFRESH_TOKEN_NAME);
-    res.status(STATUS_OK).json({ data: { message: MSG_SUCCESS } });
+    res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
 
   async changePassword(req: Request, res: Response) {
