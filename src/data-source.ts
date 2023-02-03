@@ -23,7 +23,7 @@ export const AppDataSource = new DataSource({
         database: "DoAnTotNghiep",
         synchronize: false,
       }),
-  logging: true,
+  logging: false,
   entities: [path.join(__dirname, "/entities/*")],
   subscribers: [ProductVariantSubscriber],
   migrations: [path.join(__dirname, "/migrations/*")],

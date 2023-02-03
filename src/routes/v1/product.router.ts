@@ -15,6 +15,7 @@ productRouter.get(
   requireLogin,
   favoriteproductController.getByUser
 );
+productRouter.get("/search", productController.searchProduct);
 productRouter.get("/:id", productController.getById);
 productRouter.get("/", getUser, productController.getAllProducts);
 productRouter.post(

@@ -206,31 +206,31 @@ class GroupProductService {
           const groupproducts = await this.getRepository().save([
             {
               name: "Áo thun",
-              slug: "ao-thun",
+              slug: "ao-thun-nam",
             },
             {
               name: "Áo sơ mi",
-              slug: "ao-so-mi",
+              slug: "ao-so-mi-nam",
             },
             {
               name: "Áo polo",
-              slug: "ao-polo",
+              slug: "ao-polo-nam",
             },
             {
               name: "Áo khoác",
-              slug: "ao-khoac",
+              slug: "ao-khoac-nam",
             },
             {
               name: "Quần tây",
-              slug: "quan-tay",
+              slug: "quan-tay-nam",
             },
             {
               name: "Quần short",
-              slug: "quan-short",
+              slug: "quan-short-nam",
             },
             {
               name: "Quần kaki",
-              slug: "quan-kaki",
+              slug: "quan-kaki-nam",
             },
           ]);
           resolve({ data: { items: groupproducts } });

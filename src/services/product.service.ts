@@ -5,11 +5,12 @@ import {
   everageStar,
   handleILike,
   handlePagination,
+  handleSearch,
   handleSearchILike,
   handleSort,
 } from "../utils";
 import Product from "../entities/product.entity";
-import { QueryParams, ResponseData } from "../utils/types";
+import { PaginationParams, QueryParams, ResponseData } from "../utils/types";
 import commentproductService from "./commentproduct.service";
 import orderItemService from "./orderitem.service";
 import productvariantService from "./productvariant.service";
@@ -104,19 +105,20 @@ class ProductService {
           min_price,
           max_price,
           v_ids,
-          q,
         } = query;
         const { wherePagination } = handlePagination(query);
         const { sortBy, sortType, sort } = handleSort(query);
+
         let [products, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
             ...handleILike("name", name),
             ...handleILike("slug", slug),
-            ...handleSearchILike(["name", "slug"], q),
             ...(group_product_slug
               ? {
-                  groupProduct: handleILike("slug", group_product_slug),
+                  groupProduct: {
+                    ...handleILike("slug", group_product_slug),
+                  },
                 }
               : {}),
             ...(min_price && !max_price
@@ -156,7 +158,6 @@ class ProductService {
             minPrice: this.price(product, "min"),
             maxPrice: this.price(product, "max"),
           })) as ProductHasMinMaxPrice[];
-
           if (sortBy && sortBy === "price")
             newProducts.sort(
               (a: ProductHasMinMaxPrice, b: ProductHasMinMaxPrice) =>
@@ -168,6 +169,40 @@ class ProductService {
         }
       } catch (error) {
         console.log("GET ALL PRODUCTS ERROR", error);
+        resolve({ error });
+      }
+    });
+  }
+
+  searchProduct(
+    query: PaginationParams & Partial<{ q: string }>
+  ): Promise<ResponseData> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { q } = query;
+        const { wherePagination } = handlePagination(query);
+
+        let [products, count] = await this.getRepository().findAndCount({
+          order: {
+            id: "DESC",
+          },
+          where: [handleILike("slug", q), handleILike("name", q)],
+          withDeleted: false,
+          ...wherePagination,
+          relations: {
+            productVariants: { variantValues: { variant: true } },
+            images: true,
+          },
+        });
+        const newProducts = products.map((product: Product) => ({
+          ...product,
+          minPrice: this.price(product, "min"),
+          maxPrice: this.price(product, "max"),
+        })) as ProductHasMinMaxPrice[];
+
+        resolve({ data: { items: newProducts, count } });
+      } catch (error) {
+        console.log("SEARCH PRODUCTS ERROR", error);
         resolve({ error });
       }
     });

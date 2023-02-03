@@ -51,6 +51,17 @@ export const handleSearchILike = (keys: string[], q?: string) => {
 
   return obj;
 };
+export const handleSearch = (keys: string[], q?: string) => {
+  if (!q) return [];
+
+  let arr: any = [];
+
+  keys.forEach((key) => {
+    arr.push({ [key]: ILike(`%${q}%`) });
+  });
+
+  return arr;
+};
 export const handleSearchEqual = (
   keys: string[],
   q?: string,

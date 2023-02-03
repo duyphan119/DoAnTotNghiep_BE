@@ -64,6 +64,13 @@ class ProductController {
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
+  async searchProduct(req: Request, res: Response) {
+    const { error, data } = await productService.searchProduct(req.query);
+    if (error) {
+      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    }
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+  }
   //   async seed(req: Request, res: Response) {
   //     const { error, data } = await productService.seed();
   //     if (error) {
