@@ -6,7 +6,7 @@ const groupProductRouter = Router();
 
 groupProductRouter.get("/seed", groupProductController.seed);
 groupProductRouter.get("/:id", getUser, groupProductController.getById);
-groupProductRouter.get("/", groupProductController.getAll);
+groupProductRouter.get("/", getUser, groupProductController.getAll);
 groupProductRouter.post(
   "/",
   requireIsAdmin,
