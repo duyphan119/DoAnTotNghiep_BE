@@ -173,6 +173,11 @@ class ProductVariantService {
   deleteProductVariant(id: number): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
+        const item = await this.getRepository().findOne({
+          where: { id },
+          relations: { variantValues: true },
+        });
+        await this.getRepository().save({ ...item, variantValues: [] });
         await this.getRepository().delete({ id });
         resolve({});
       } catch (error) {
