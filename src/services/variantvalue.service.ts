@@ -11,11 +11,9 @@ import variantService from "./variant.service";
 
 type VariantValueQueryParams = QueryParams &
   Partial<{
-    title: string;
-    slug: string;
-    content: string;
-    q: string;
     variant: string;
+    value: string;
+    type: string;
   }>;
 
 type CreateVariantValueDTO = {
@@ -33,16 +31,14 @@ class VariantValueService {
   ): Promise<ResponseData> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, title, slug, content, q, variant } = query;
+        const { withDeleted, variant, value, type } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [variantValues, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
-            ...handleILike("title", title),
-            ...handleILike("slug", slug),
-            ...handleILike("content", content),
-            ...handleSearchILike(["title", "slug", "content"], q),
+            ...handleILike("value", value),
+            ...(type ? { variant: handleILike("name", type) } : {}),
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
