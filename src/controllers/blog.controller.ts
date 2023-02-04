@@ -10,7 +10,10 @@ import blogService from "../services/blog.service";
 
 class BlogController {
   async getAll(req: Request, res: Response) {
-    const { error, data } = await blogService.getAll(req.query);
+    const { error, data } = await blogService.getAll(
+      req.query,
+      res.locals.user && res.locals.user.isAdmin ? true : false
+    );
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
     }

@@ -10,10 +10,9 @@ import groupproductService from "../services/groupproduct.service";
 
 class GroupProductController {
   async getAll(req: Request, res: Response) {
-    const { isAdmin } = res.locals.user;
     const { error, data } = await groupproductService.getAll(
       req.query,
-      isAdmin
+      res.locals.user && res.locals.user.isAdmin ? true : false
     );
     if (error) {
       return res.status(STATUS_INTERVAL_ERROR).json(error);
