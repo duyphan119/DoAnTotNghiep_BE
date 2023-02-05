@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  MSG_ERROR,
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_INTERVAL_ERROR,
@@ -64,29 +65,29 @@ class ProductVariantController {
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async deleteProductVariant(req: Request, res: Response) {
-    const { error } = await productVariantService.deleteProductVariant(
+    const result = await productVariantService.deleteProductVariant(
       +req.params.id
     );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async softDeleteProductVariant(req: Request, res: Response) {
-    const { error } = await productVariantService.softDeleteProductVariant(
+    const result = await productVariantService.softDeleteProductVariant(
       +req.params.id
     );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async restoreProductVariant(req: Request, res: Response) {
-    const { error } = await productVariantService.restoreProductVariant(
+    const result = await productVariantService.restoreProductVariant(
       +req.params.id
     );
-    if (error) {
-      return res.status(STATUS_UNAUTH).json(error);
+    if (!result) {
+      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }

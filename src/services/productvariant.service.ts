@@ -138,7 +138,7 @@ class ProductVariantService {
           });
           resolve({ data: newProductVariant });
         }
-        resolve({});
+        resolve({ error: Error });
       } catch (error) {
         console.log("UPDATE PRODUCT VARIANT ERROR", error);
         resolve({ error });
@@ -146,31 +146,31 @@ class ProductVariantService {
     });
   }
 
-  softDeleteProductVariant(id: number): Promise<ResponseData> {
+  softDeleteProductVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE PRODUCT VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  restoreProductVariant(id: number): Promise<ResponseData> {
+  restoreProductVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE PRODUCT VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  deleteProductVariant(id: number): Promise<ResponseData> {
+  deleteProductVariant(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOne({
@@ -179,10 +179,10 @@ class ProductVariantService {
         });
         await this.getRepository().save({ ...item, variantValues: [] });
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
