@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { MSG_ERROR, MSG_SUCCESS, STATUS_OK } from "../constantList";
+import {
+  MSG_ERROR,
+  MSG_SUCCESS,
+  STATUS_CREATED,
+  STATUS_INTERVAL_ERROR,
+  STATUS_OK,
+} from "../constantList";
 import orderDiscountService from "../services/orderdiscount.service";
 
 class OrderDiscountController {
@@ -19,6 +25,13 @@ class OrderDiscountController {
     }
 
     return res.status(STATUS_OK).json({ message: MSG_ERROR });
+  }
+
+  async create(req: Request, res: Response) {
+    const data = await orderDiscountService.create(req.body);
+    if (!data) res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+
+    res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   }
 }
 
