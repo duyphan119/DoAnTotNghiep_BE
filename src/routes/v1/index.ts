@@ -3,21 +3,21 @@ import advertisementRouter from "./advertisement.router";
 import authRouter from "./auth.router";
 import blogRouter from "./blog.router";
 import cartRouter from "./cart.router";
-import commentProductRouter from "./commentproduct.router";
-import groupProductRouter from "./groupproduct.router";
+import commentProductRouter from "./commentProduct.router";
+import groupProductRouter from "./groupProduct.router";
 import notifyRouter from "./notify.router";
 import orderRouter from "./order.router";
-import orderDiscountRouter from "./orderdiscount.router";
+import orderDiscountRouter from "./orderDiscount.router";
 import productRouter from "./product.router";
 import productVariantRouter from "./productvariant.router";
 import productVariantImageRouter from "./productvariantimage.router";
-import settingWensiteRouter from "./settingwebsite.router";
+import settingWensiteRouter from "./settingWebsite.router";
 import statisticsRouter from "./statistics.router";
 import uploadRouter from "./upload.router";
 import userRouter from "./user.router";
-import userAddressRouter from "./useraddress.router";
+import userAddressRouter from "./userAddress.router";
 import variantRouter from "./variant.router";
-import variantValueRouter from "./variantvalue.router";
+import variantValueRouter from "./variantValue.router";
 
 const v1Router = Router();
 

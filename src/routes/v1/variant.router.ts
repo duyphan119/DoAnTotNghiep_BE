@@ -2,23 +2,15 @@ import { Router } from "express";
 import variantController from "../../controllers/variant.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
-const variantRouter = Router();
+const router = Router();
 
-variantRouter.get("/seed", variantController.seed);
-variantRouter.get("/:id", variantController.getById);
-variantRouter.get("/", getUser, variantController.getAll);
-variantRouter.post("/", requireIsAdmin, variantController.createVariant);
-variantRouter.patch("/:id", requireIsAdmin, variantController.updateVariant);
-variantRouter.delete(
-  "/soft/:id",
-  requireIsAdmin,
-  variantController.softDeleteVariant
-);
-variantRouter.delete(
-  "/restore/:id",
-  requireIsAdmin,
-  variantController.restoreVariant
-);
-variantRouter.delete("/:id", requireIsAdmin, variantController.deleteVariant);
+router.get("/seed", variantController.seed);
+router.get("/:id", variantController.getById);
+router.get("/", getUser, variantController.getAll);
+router.post("/", requireIsAdmin, variantController.createVariant);
+router.patch("/:id", requireIsAdmin, variantController.updateVariant);
+router.delete("/soft/:id", requireIsAdmin, variantController.softDeleteVariant);
+router.delete("/restore/:id", requireIsAdmin, variantController.restoreVariant);
+router.delete("/:id", requireIsAdmin, variantController.deleteVariant);
 
-export default variantRouter;
+export default router;

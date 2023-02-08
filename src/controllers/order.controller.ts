@@ -3,6 +3,7 @@ import {
   MSG_ERROR,
   MSG_SUCCESS,
   STATUS_INTERVAL_ERROR,
+  STATUS_NOTFOUND,
   STATUS_OK,
 } from "../constantList";
 import { NotifyTypeEnum } from "../entities/notify.entity";
@@ -11,62 +12,53 @@ import orderService from "../services/order.service";
 
 class OrderController {
   async getAllOrders(req: Request, res: Response) {
-    const { data, error } = await orderService.getAllOrders(
-      req.query,
-      false,
-      true
-    );
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
-    }
-    return res.status(STATUS_INTERVAL_ERROR).json(error);
+    const data = await orderService.getAllOrders(req.query, false, true);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getOrdersUser(req: Request, res: Response) {
-    const { data, error } = await orderService.getAllOrders(
+    const data = await orderService.getAllOrders(
       req.query,
       false,
       false,
       +res.locals.user.id
     );
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
-    }
-    return res.status(STATUS_OK).json({ error, message: MSG_ERROR });
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getOrderById(req: Request, res: Response) {
-    const { data, error } = await orderService.getOrderById(+req.params.id);
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    const data = await orderService.getOrderById(+req.params.id);
+    if (!data) {
+      return res.status(STATUS_NOTFOUND).json({ message: MSG_ERROR });
     }
-    return res.status(STATUS_INTERVAL_ERROR).json(error);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
 
   async updateStatus(req: Request, res: Response) {
-    const { data, error } = await orderService.updateStatus(+req.params.id);
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    const data = await orderService.updateStatus(+req.params.id);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
-    return res.status(STATUS_INTERVAL_ERROR).json(error);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async checkout(req: Request, res: Response) {
     const userId = +res.locals.user.id;
-    const { data, error } = await orderService.checkout(userId, req.body);
+    const data = await orderService.checkout(userId, req.body);
 
-    if (data) {
-      const { data: data2 } = await notifyService.createOne(userId, {
-        message: "Bạn có đơn hàng mới",
-        type: NotifyTypeEnum.Order,
-      });
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    const { data: data2 } = await notifyService.createOne(userId, {
+      message: "Bạn có đơn hàng mới",
+      type: NotifyTypeEnum.Order,
+    });
 
-      if (data2) {
-        _io.emit("Has notify", data2);
-      }
-
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    if (data2) {
+      _io.emit("Has notify", data2);
     }
 
-    return res.status(STATUS_INTERVAL_ERROR).json(error);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
 }
 
-export default new OrderController();
+const orderController = new OrderController();
+
+export default orderController;

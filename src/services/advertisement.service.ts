@@ -1,27 +1,21 @@
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Advertisement from "../entities/advertisement.entity";
 import { handleEqual, handleILike, handleSort } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-
-type AdvertisementQueryParams = QueryParams &
-  Partial<{
-    title: string;
-    page: string;
-  }>;
-
-type CreateAdvertisementDTO = {
-  path: string;
-  title: string;
-  href: string;
-  page: string;
-};
+import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import {
+  CreateAdvertisementDTO,
+  GetAllAdvertisementQueryParams,
+} from "../utils/types/advertisement";
 
 class AdvertisementService {
   getRepository() {
     return AppDataSource.getRepository(Advertisement);
   }
 
-  getAll(query: AdvertisementQueryParams): Promise<ResponseData> {
+  getAll(
+    query: GetAllAdvertisementQueryParams
+  ): Promise<GetAll<Advertisement>> {
     return new Promise(async (resolve, _) => {
       try {
         const { title, page } = query;
@@ -33,39 +27,42 @@ class AdvertisementService {
             ...handleEqual("page", page),
           },
         });
-        resolve({ data: { items, count } });
+        resolve({ items, count });
       } catch (error) {
         console.log("GET ALL ADVERTISEMENTS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<Advertisement | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
-        resolve({ data: item });
+        resolve(item);
       } catch (error) {
         console.log("GET ALL ADVERTISEMENTS ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  create(dto: CreateAdvertisementDTO): Promise<ResponseData> {
+  create(dto: CreateAdvertisementDTO): Promise<Advertisement | null> {
     return new Promise(async (resolve, _) => {
       try {
         const advertisement = await this.getRepository().save(dto);
-        resolve({ data: advertisement });
+        resolve(advertisement);
       } catch (error) {
         console.log("CREATE ADVERTISEMENT ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  update(id: number, dto: Partial<Advertisement>): Promise<ResponseData> {
+  update(
+    id: number,
+    dto: Partial<Advertisement>
+  ): Promise<Advertisement | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
@@ -74,27 +71,28 @@ class AdvertisementService {
             ...item,
             ...dto,
           });
-          resolve({ data: advertisement });
+          resolve(advertisement);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE ADVERTISEMENT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
-  delete(id: number): Promise<ResponseData> {
+  delete(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("UPDATE ADVERTISEMENT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 }
 
-export default new AdvertisementService();
+const advertisementService = new AdvertisementService();
+
+export default advertisementService;

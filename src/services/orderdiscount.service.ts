@@ -1,6 +1,6 @@
 import { AppDataSource } from "../data-source";
-import OrderDiscount from "../entities/orderdiscount.entity";
-import GetAllType from "../utils/types/GetAll";
+import OrderDiscount from "../entities/orderDiscount.entity";
+import GetAll from "../utils/types/GetAllT";
 import orderService from "./order.service";
 
 export type CreateOrderDiscountDTO = {
@@ -59,7 +59,7 @@ class OrderDiscountService {
     });
   }
 
-  getAll(query: any): Promise<GetAllType<OrderDiscount>> {
+  getAll(query: any): Promise<GetAll<OrderDiscount>> {
     return new Promise(async (resolve, _) => {
       try {
         const [items, count] = await this.getRepository().findAndCount();
@@ -72,4 +72,6 @@ class OrderDiscountService {
   }
 }
 
-export default new OrderDiscountService();
+const orderDiscountService = new OrderDiscountService();
+
+export default orderDiscountService;

@@ -1,33 +1,8 @@
-import { AppDataSource } from "../data-source";
-import Order from "../entities/order.entity";
-import commentProductService from "./commentproduct.service";
+import Statistics from "../utils/types/statistics";
+import commentProductService from "./commentProduct.service";
 import orderService from "./order.service";
-import productService, { BestSellerProduct } from "./product.service";
+import productService from "./product.service";
 import userService from "./user.service";
-
-type Statistics = {
-  countUser: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-  countOrder: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-  countCommentProduct: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-  revenue: {
-    currentMonth: number;
-    lastMonth: number;
-  };
-  listRevenueByMonth: any;
-  listRevenueToday: any;
-  recentOrders: Order[];
-  bestSellerProducts: BestSellerProduct[];
-  listRevenueByYear: any;
-};
 
 class StatisticsService {
   getStatistics(): Promise<Statistics | null> {

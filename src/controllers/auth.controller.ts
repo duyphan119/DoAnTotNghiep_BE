@@ -15,18 +15,18 @@ import userService from "../services/user.service";
 class AuthController {
   async register(req: Request, res: Response) {
     const { email } = req.body;
-    const { data } = await userService.getByEmail(email);
+    const user = await userService.getByEmail(email);
     let message = "Email is available";
-    if (!data) {
-      const { data } = await userService.createUser(req.body);
-      if (data) {
+    if (!user) {
+      const newUser = await userService.createUser(req.body);
+      if (newUser) {
         const payload = {
-          id: data.id,
-          isAdmin: data.isAdmin,
+          id: newUser.id,
+          isAdmin: newUser.isAdmin,
         };
         const accessToken = authService.signAccessToken(payload);
         const refreshToken = authService.signRefreshToken(payload);
-        const { password: _password, ...hidedPasswordUser } = data;
+        const { password: _password, ...hidedPasswordUser } = newUser;
         res.cookie(
           COOKIE_REFRESH_TOKEN_NAME,
           refreshToken,
@@ -43,22 +43,22 @@ class AuthController {
 
   async login(req: Request, res: Response) {
     const { email, password } = req.body;
-    const { data } = await userService.getByEmail(email);
+    const user = await userService.getByEmail(email);
     let message = "Email is incorrect";
-    if (data) {
+    if (user) {
       const compareResult = await userService.comparePassword(
         password,
-        data.password
+        user.password
       );
       message = "Password is incorrect";
       if (compareResult) {
         const payload = {
-          id: data.id,
-          isAdmin: data.isAdmin,
+          id: user.id,
+          isAdmin: user.isAdmin,
         };
         const accessToken = authService.signAccessToken(payload);
         const refreshToken = authService.signRefreshToken(payload);
-        const { password: _password, ...hidedPasswordUser } = data;
+        const { password: _password, ...hidedPasswordUser } = user;
         res.cookie(
           COOKIE_REFRESH_TOKEN_NAME,
           refreshToken,
@@ -103,9 +103,9 @@ class AuthController {
     if (!res.locals.user)
       return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
     const userId = +res.locals.user.id;
-    const { data, error } = await userService.getById(userId);
+    const data = await userService.getById(userId);
 
-    if (error) {
+    if (!data) {
       return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
     }
 
@@ -115,12 +115,12 @@ class AuthController {
   async changeProfile(req: Request, res: Response) {
     const userId = +res.locals.user.id;
 
-    const { data, error } = await userService.updateUser(userId, req.body);
+    const data = await userService.updateUser(userId, req.body);
 
-    if (data) {
-      return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
-    return res.status(STATUS_INTERVAL_ERROR).json({ error });
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
 
   logout(req: Request, res: Response) {
@@ -131,16 +131,18 @@ class AuthController {
   async changePassword(req: Request, res: Response) {
     const userId = +res.locals.user.id;
     const { oldPassword, newPassword } = req.body;
-    const { data, error } = await userService.changePassword(
+    const result = await userService.changePassword(
       userId,
       newPassword,
       oldPassword
     );
-    if (data) {
-      return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+    if (!result) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
-    return res.status(STATUS_INTERVAL_ERROR).json({ error });
+    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
 }
 
-export default new AuthController();
+const authController = new AuthController();
+
+export default authController;

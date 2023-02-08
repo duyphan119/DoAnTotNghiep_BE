@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import CommentProduct from "./commentproduct.entity";
+import CommentProduct from "./commentProduct.entity";
 import Order from "./order.entity";
 
 @Entity({ name: "taikhoan" })

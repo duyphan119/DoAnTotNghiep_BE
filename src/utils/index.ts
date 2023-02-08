@@ -1,5 +1,5 @@
 import { ILike } from "typeorm";
-import CommentProduct from "../entities/commentproduct.entity";
+import CommentProduct from "../entities/commentProduct.entity";
 import { PaginationParams, SortParams } from "./types";
 
 export const generateFolder = (date: Date) => {

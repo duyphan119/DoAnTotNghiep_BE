@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import VariantValue from "./variantvalue.entity";
+import VariantValue from "./variantValue.entity";
 
 @Entity({ name: "bienthe" })
 class Variant {

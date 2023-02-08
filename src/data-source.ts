@@ -2,7 +2,7 @@ import path from "path";
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { __prod__ } from "./constantList";
-import { ProductVariantSubscriber } from "./entities/productvariant.entity";
+import { ProductVariantSubscriber } from "./entities/productVariant.entity";
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "localhost",

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import favoriteproductController from "../../controllers/favoriteproduct.controller";
 import productController from "../../controllers/product.controller";
 import {
   getUser,
@@ -7,39 +6,16 @@ import {
   requireLogin,
 } from "../../middlewares/auth.middleware";
 
-const productRouter = Router();
+const router = Router();
 
-// productRouter.get("/seed", productController.seed);
-productRouter.get(
-  "/favorite/user",
-  requireLogin,
-  favoriteproductController.getByUser
-);
-productRouter.get("/search", productController.searchProduct);
-productRouter.get("/:id", productController.getById);
-productRouter.get("/", getUser, productController.getAllProducts);
-productRouter.post(
-  "/favorite",
-  requireLogin,
-  favoriteproductController.createFavoriteProduct
-);
-productRouter.post("/", requireIsAdmin, productController.createProduct);
-productRouter.patch("/:id", requireIsAdmin, productController.updateProduct);
-productRouter.delete(
-  "/soft/:id",
-  requireIsAdmin,
-  productController.softDeleteProduct
-);
-productRouter.delete(
-  "/restore/:id",
-  requireIsAdmin,
-  productController.restoreProduct
-);
-productRouter.delete(
-  "/:id/favorite",
-  requireLogin,
-  favoriteproductController.deleteFavoriteProduct
-);
-productRouter.delete("/:id", requireIsAdmin, productController.deleteProduct);
+// router.get("/seed", productController.seed);
+router.get("/search", productController.searchProduct);
+router.get("/:id", productController.getById);
+router.get("/", getUser, productController.getAllProducts);
+router.post("/", requireIsAdmin, productController.createProduct);
+router.patch("/:id", requireIsAdmin, productController.updateProduct);
+router.delete("/soft/:id", requireIsAdmin, productController.softDeleteProduct);
+router.delete("/restore/:id", requireIsAdmin, productController.restoreProduct);
+router.delete("/:id", requireIsAdmin, productController.deleteProduct);
 
-export default productRouter;
+export default router;

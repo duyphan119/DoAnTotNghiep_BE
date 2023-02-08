@@ -1,27 +1,27 @@
 import { Router } from "express";
 import { requireIsAdmin } from "../../middlewares/auth.middleware";
-import productVariantImageController from "../../controllers/productvariantimage.controller";
+import productVariantImageController from "../../controllers/productVariantImage.controller";
 
-const productVariantImageRouter = Router();
+const router = Router();
 
-// productVariantImageRouter.get("/:id", variantController.getVariantById);
-productVariantImageRouter.get("/", productVariantImageController.getAll);
-productVariantImageRouter.post(
+// router.get("/:id", variantController.getVariantById);
+router.get("/", productVariantImageController.getAll);
+router.post(
   "/many",
   requireIsAdmin,
   productVariantImageController.createProductVariantImages
 );
-// productVariantImageRouter.post("/", requireIsAdmin, variantController.createVariant);
-productVariantImageRouter.patch(
+// router.post("/", requireIsAdmin, variantController.createVariant);
+router.patch(
   "/:id",
   requireIsAdmin,
   productVariantImageController.updateProductVariantImage
 );
-productVariantImageRouter.delete(
+router.delete(
   "/:id",
   requireIsAdmin,
   productVariantImageController.deleteProductVariantImage
 );
-// productVariantImageRouter.delete("/", requireIsAdmin, variantController.deleteVariants);
+// router.delete("/", requireIsAdmin, variantController.deleteVariants);
 
-export default productVariantImageRouter;
+export default router;

@@ -1,8 +1,8 @@
 import { AppDataSource } from "../data-source";
-import OrderItem from "../entities/orderitem.entity";
-import ProductVariant from "../entities/productvariant.entity";
+import OrderItem from "../entities/orderItem.entity";
+import ProductVariant from "../entities/productVariant.entity";
 import { ResponseData } from "../utils/types";
-import productVariantService from "./productvariant.service";
+import productVariantService from "./productVariant.service";
 
 export type CreateOrderItemDTO = {
   quantity: number;
@@ -15,7 +15,7 @@ class OrderItemService {
     return AppDataSource.getRepository(OrderItem);
   }
 
-  getById(id: number, relations?: boolean): Promise<ResponseData> {
+  getById(id: number, relations?: boolean): Promise<OrderItem | null> {
     return new Promise(async (resolve, _) => {
       try {
         const orderItem = await this.getRepository().findOne({
@@ -36,14 +36,14 @@ class OrderItemService {
               }
             : {}),
         });
-        resolve({ data: orderItem });
+        resolve(orderItem);
       } catch (error) {
         console.log("GET ORDER ITEM BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  updateInventory(orderId: number) {
+  updateInventory(orderId: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const orderItems = await this.getRepository().find({
@@ -75,27 +75,30 @@ class OrderItemService {
           }
         });
         await Promise.all(promises);
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("UPDATE INVENTORY ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  deleteOrderItem(id: number): Promise<ResponseData> {
+  deleteOrderItem(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE ORDER ITEM ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  updateOrderItem(id: number, dto: Partial<OrderItem>): Promise<ResponseData> {
+  updateOrderItem(
+    id: number,
+    dto: Partial<OrderItem>
+  ): Promise<OrderItem | null> {
     return new Promise(async (resolve, _) => {
       try {
         const orderItem = await this.getRepository().findOneBy({ id });
@@ -104,17 +107,16 @@ class OrderItemService {
             ...orderItem,
             ...dto,
           });
-          resolve({ data: newOrderItem });
+          resolve(newOrderItem);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE ORDER ITEM ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
-  createOrderItem(dto: CreateOrderItemDTO): Promise<ResponseData> {
+  createOrderItem(dto: CreateOrderItemDTO): Promise<OrderItem | null> {
     return new Promise(async (resolve, _) => {
       try {
         const orderItem = await this.getRepository().findOneBy({
@@ -133,13 +135,15 @@ class OrderItemService {
               }
             : dto
         );
-        resolve({ data: newOrderItem });
+        resolve(newOrderItem);
       } catch (error) {
         console.log("CREATE ORDER ITEM ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 }
 
-export default new OrderItemService();
+const orderItemService = new OrderItemService();
+
+export default orderItemService;

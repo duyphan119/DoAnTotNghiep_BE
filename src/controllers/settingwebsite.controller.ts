@@ -7,46 +7,38 @@ import {
   STATUS_OK,
   STATUS_UNAUTH,
 } from "../constantList";
-import settingWebsiteService from "../services/settingwebsite.service";
+import settingWebsiteService from "../services/settingWebsite.service";
 
 class SettingWebsiteController {
   async getAll(req: Request, res: Response) {
-    const { error, data } = await settingWebsiteService.getAll(req.query);
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
-    }
+    const data = await settingWebsiteService.getAll(req.query);
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getById(req: Request, res: Response) {
-    const { error, data } = await settingWebsiteService.getById(+req.params.id);
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    const data = await settingWebsiteService.getById(+req.params.id);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async getByKeys(req: Request, res: Response) {
-    const { error, data } = await settingWebsiteService.getByKeys(
-      req.body.keys
-    );
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
-    }
+    const data = await settingWebsiteService.getByKeys(req.body.keys);
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
   async createOne(req: Request, res: Response) {
-    const { error, data } = await settingWebsiteService.createOne(req.body);
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    const data = await settingWebsiteService.createOne(req.body);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   }
   async updateOne(req: Request, res: Response) {
-    const { error, data } = await settingWebsiteService.updateOne(
+    const data = await settingWebsiteService.updateOne(
       +req.params.id,
       req.body
     );
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
@@ -60,10 +52,12 @@ class SettingWebsiteController {
   async seed(req: Request, res: Response) {
     const { error, data } = await settingWebsiteService.seed();
     if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   }
 }
 
-export default new SettingWebsiteController();
+const settingWebsiteController = new SettingWebsiteController();
+
+export default settingWebsiteController;

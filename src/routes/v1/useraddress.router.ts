@@ -1,24 +1,12 @@
 import { Router } from "express";
-import userAddressController from "../../controllers/useraddress.controller";
+import userAddressController from "../../controllers/userAddress.controller";
 import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 
-const userAddressRouter = Router();
+const router = Router();
 
-userAddressRouter.get("/user", getUser, userAddressController.getByUserId);
-userAddressRouter.post(
-  "/",
-  requireLogin,
-  userAddressController.createUserAddress
-);
-userAddressRouter.patch(
-  "/:id",
-  requireLogin,
-  userAddressController.updateUserAddress
-);
-userAddressRouter.delete(
-  "/:id",
-  requireLogin,
-  userAddressController.deleteUserAddress
-);
+router.get("/user", getUser, userAddressController.getByUserId);
+router.post("/", requireLogin, userAddressController.createUserAddress);
+router.patch("/:id", requireLogin, userAddressController.updateUserAddress);
+router.delete("/:id", requireLogin, userAddressController.deleteUserAddress);
 
-export default userAddressRouter;
+export default router;

@@ -1,20 +1,13 @@
 import { Router } from "express";
-import commentproductController from "../../controllers/commentproduct.controller";
+import commentProductController from "../../controllers/commentProduct.controller";
 import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 
-const commentProductRouter = Router();
+const router = Router();
 
-commentProductRouter.get("/", getUser, commentproductController.getAll);
-commentProductRouter.post("/", requireLogin, commentproductController.create);
-commentProductRouter.patch(
-  "/:id",
-  requireLogin,
-  commentproductController.update
-);
-commentProductRouter.delete(
-  "/:id",
-  requireLogin,
-  commentproductController.delete
-);
+router.get("/id", requireLogin, commentProductController.getById);
+router.get("/", getUser, commentProductController.getAll);
+router.post("/", requireLogin, commentProductController.create);
+router.patch("/:id", requireLogin, commentProductController.update);
+router.delete("/:id", requireLogin, commentProductController.delete);
 
-export default commentProductRouter;
+export default router;

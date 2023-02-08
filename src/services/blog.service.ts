@@ -1,35 +1,22 @@
+import slugify from "slugify";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Blog from "../entities/blog.entity";
-import { QueryParams, ResponseData } from "../utils/types";
-import {
-  handleSort,
-  handlePagination,
-  handleILike,
-  handleSearchILike,
-} from "../utils";
-import slugify from "slugify";
-
-type BlogQueryParams = QueryParams &
-  Partial<{
-    title: string;
-    slug: string;
-    content: string;
-    q: string;
-  }>;
-
-type CreateBlogDTO = {
-  title: string;
-  content: string;
-} & Partial<{ thumbnail: string }>;
+import { handleILike, handlePagination, handleSort } from "../utils";
+import { GetAll, ResponseData } from "../utils/types";
+import { CreateBlogDTO, GetAllBlogQueryParams } from "../utils/types/blog";
 
 class BlogService {
   getRepository() {
     return AppDataSource.getRepository(Blog);
   }
-  getAll(query: BlogQueryParams, isAdmin?: boolean): Promise<ResponseData> {
+  getAll(
+    query: GetAllBlogQueryParams,
+    isAdmin?: boolean
+  ): Promise<GetAll<Blog>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, title, slug, content, q } = query;
+        const { withDeleted, title, slug, content } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [blogs, count] = await this.getRepository().findAndCount({
@@ -38,30 +25,29 @@ class BlogService {
             ...handleILike("title", title),
             ...handleILike("slug", slug),
             ...handleILike("content", content),
-            ...handleSearchILike(["title", "slug", "content"], q),
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
         });
-        resolve({ data: { items: blogs, count } });
+        resolve({ items: blogs, count });
       } catch (error) {
         console.log("GET ALL BLOGS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<Blog | null> {
     return new Promise(async (resolve, _) => {
       try {
         const blog = await this.getRepository().findOneBy({ id });
-        resolve({ data: blog });
+        resolve(blog);
       } catch (error) {
         console.log("GET BLOG BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  createBlog(userId: number, dto: CreateBlogDTO): Promise<ResponseData> {
+  createBlog(userId: number, dto: CreateBlogDTO): Promise<Blog | null> {
     return new Promise(async (resolve, _) => {
       try {
         const { title } = dto;
@@ -70,10 +56,10 @@ class BlogService {
           userId,
           slug: slugify(title, { lower: true }),
         });
-        resolve({ data: newBlog });
+        resolve(newBlog);
       } catch (error) {
         console.log("CREATE BLOG ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
@@ -81,7 +67,7 @@ class BlogService {
     id: number,
     userId: number,
     dto: Partial<CreateBlogDTO>
-  ): Promise<ResponseData> {
+  ): Promise<Blog | null> {
     return new Promise(async (resolve, _) => {
       try {
         const blog = await this.getRepository().findOneBy({ id, userId });
@@ -92,45 +78,44 @@ class BlogService {
             ...dto,
             ...(title ? { slug: slugify(title, { lower: true }) } : {}),
           });
-          resolve({ data: newBlog });
+          resolve(newBlog);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE BLOG ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
-  softDeleteBlog(id: number): Promise<ResponseData> {
+  softDeleteBlog(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE BLOG ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  restoreBlog(id: number): Promise<ResponseData> {
+  restoreBlog(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE BLOG ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  deleteBlog(id: number): Promise<ResponseData> {
+  deleteBlog(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE BLOG ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
@@ -176,4 +161,6 @@ class BlogService {
   }
 }
 
-export default new BlogService();
+const blogService = new BlogService();
+
+export default blogService;

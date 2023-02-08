@@ -1,26 +1,22 @@
 import { AppDataSource } from "../data-source";
 import { handlePagination, handleSort } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-import ProductVariantImage from "../entities/productvariantimage.entity";
+import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import ProductVariantImage from "../entities/productVarianImage.entity";
 import { getCloudinary } from "../configCloudinary";
-
-export type ProductVariantImageQueryParams = QueryParams &
-  Partial<{
-    productId: string;
-  }>;
-
-export type CreateProductVariantImageDTO = {
-  path: string;
-  productId: number;
-  variantValueId: number | null;
-};
+import {
+  CreateProductVariantImageDTO,
+  GetAllProductVariantImageQueryParams,
+} from "../utils/types/productVariantImage";
+import { EMPTY_ITEMS } from "../constantList";
 
 class ProductVariantImageService {
   getRepository() {
     return AppDataSource.getRepository(ProductVariantImage);
   }
 
-  getAll(query: ProductVariantImageQueryParams): Promise<ResponseData> {
+  getAll(
+    query: GetAllProductVariantImageQueryParams
+  ): Promise<GetAll<ProductVariantImage>> {
     return new Promise(async (resolve, _) => {
       try {
         const { productId } = query;
@@ -36,17 +32,17 @@ class ProductVariantImageService {
             ...wherePagination,
             order: sort,
           });
-        resolve({ data: { items: productVariantImages, count } });
+        resolve({ items: productVariantImages, count });
       } catch (error) {
         console.log("GET ALL PRODUCT VARIANT IMAGES ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
   createProductVariantImages(
     dto: CreateProductVariantImageDTO[]
-  ): Promise<ResponseData> {
+  ): Promise<ProductVariantImage[]> {
     return new Promise(async (resolve, _) => {
       try {
         const result = await this.getRepository().save(
@@ -54,10 +50,10 @@ class ProductVariantImageService {
             Object.assign(new ProductVariantImage(), i)
           )
         );
-        resolve({ data: { items: result, count: result.length } });
+        resolve(result);
       } catch (error) {
         console.log("CREATE PRODUCT VARIANT IMAGES ERROR", error);
-        resolve({ error });
+        resolve([]);
       }
     });
   }
@@ -65,7 +61,7 @@ class ProductVariantImageService {
   updateProductVariantImage(
     id: number,
     variantValueId: number
-  ): Promise<ResponseData> {
+  ): Promise<ProductVariantImage | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
@@ -74,17 +70,16 @@ class ProductVariantImageService {
             ...item,
             variantValueId,
           });
-          resolve({ data: result });
+          resolve(result);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE PRODUCT VARIANT IMAGE ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  deleteProductVariantImage(id: number): Promise<ResponseData> {
+  deleteProductVariantImage(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
@@ -95,13 +90,15 @@ class ProductVariantImageService {
           );
           await this.getRepository().delete({ id: item.id });
         }
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT IMAGES ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 }
 
-export default new ProductVariantImageService();
+const productVariantImageService = new ProductVariantImageService();
+
+export default productVariantImageService;

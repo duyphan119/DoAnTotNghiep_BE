@@ -1,30 +1,24 @@
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Variant from "../entities/variant.entity";
-import { QueryParams, ResponseData } from "../utils/types";
 import {
-  handleSort,
-  handlePagination,
   handleILike,
+  handlePagination,
   handleSearchILike,
+  handleSort,
 } from "../utils";
-
-type VariantQueryParams = QueryParams &
-  Partial<{
-    name: string;
-    q: string;
-    variant_values: string;
-  }>;
-
-type CreateVariantDTO = {
-  name: string;
-};
+import { GetAll, ResponseData } from "../utils/types";
+import { CreateVariantDTO, VariantQueryParams } from "../utils/types/variant";
 
 class VariantService {
   getRepository() {
     return AppDataSource.getRepository(Variant);
   }
 
-  getAll(query: VariantQueryParams, isAdmin?: boolean): Promise<ResponseData> {
+  getAll(
+    query: VariantQueryParams,
+    isAdmin?: boolean
+  ): Promise<GetAll<Variant>> {
     return new Promise(async (resolve, _) => {
       try {
         const { withDeleted, name, q, variant_values } = query;
@@ -42,39 +36,39 @@ class VariantService {
             ...(variant_values ? { variantValues: true } : {}),
           },
         });
-        resolve({ data: { items: variants, count } });
+        resolve({ items: variants, count });
       } catch (error) {
         console.log("GET ALL VARIANTS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<Variant | null> {
     return new Promise(async (resolve, _) => {
       try {
         const variant = await this.getRepository().findOneBy({ id });
-        resolve({ data: variant });
+        resolve(variant);
       } catch (error) {
         console.log("GET VARIANT BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  createVariant(dto: CreateVariantDTO): Promise<ResponseData> {
+  createVariant(dto: CreateVariantDTO): Promise<Variant | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const newVariant = await this.getRepository().save(dto);
-        resolve({ data: newVariant });
+        const newItem = await this.getRepository().save(dto);
+        resolve(newItem);
       } catch (error) {
         console.log("CREATE VARIANT ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
   updateVariant(
     id: number,
     dto: Partial<CreateVariantDTO>
-  ): Promise<ResponseData> {
+  ): Promise<Variant | null> {
     return new Promise(async (resolve, _) => {
       try {
         const variant = await this.getRepository().findOneBy({ id });
@@ -83,13 +77,12 @@ class VariantService {
             ...variant,
             ...dto,
           });
-          resolve({ data: newVariant });
+          resolve(newVariant);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE VARIANT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
   softDeleteVariant(id: number): Promise<boolean> {

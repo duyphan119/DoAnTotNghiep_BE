@@ -2,25 +2,20 @@ import { Router } from "express";
 import advertisementController from "../../controllers/advertisement.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
-const advertisementRouter = Router();
+const router = Router();
 
-// advertisementRouter.get("/seed", advertisementController.seed);
-advertisementRouter.get("/:id", advertisementController.getById);
-advertisementRouter.get("/", getUser, advertisementController.getAll);
-advertisementRouter.post(
-  "/",
-  requireIsAdmin,
-  advertisementController.createAdvertisement
-);
-advertisementRouter.patch(
+router.get("/:id", advertisementController.getById);
+router.get("/", getUser, advertisementController.getAll);
+router.post("/", requireIsAdmin, advertisementController.createAdvertisement);
+router.patch(
   "/:id",
   requireIsAdmin,
   advertisementController.updateAdvertisement
 );
-advertisementRouter.delete(
+router.delete(
   "/:id",
   requireIsAdmin,
   advertisementController.deleteAdvertisement
 );
 
-export default advertisementRouter;
+export default router;

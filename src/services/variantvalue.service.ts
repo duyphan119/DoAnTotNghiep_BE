@@ -1,25 +1,13 @@
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
-import VariantValue from "../entities/variantvalue.entity";
+import VariantValue from "../entities/variantValue.entity";
+import { handleILike, handlePagination, handleSort } from "../utils";
+import { GetAll, ResponseData } from "../utils/types";
 import {
-  handleILike,
-  handlePagination,
-  handleSearchILike,
-  handleSort,
-} from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
+  CreateVariantValueDTO,
+  VariantValueQueryParams,
+} from "../utils/types/variantValue";
 import variantService from "./variant.service";
-
-type VariantValueQueryParams = QueryParams &
-  Partial<{
-    variant: string;
-    value: string;
-    type: string;
-  }>;
-
-type CreateVariantValueDTO = {
-  value: string;
-  variantId: number;
-};
 
 class VariantValueService {
   getRepository() {
@@ -28,7 +16,7 @@ class VariantValueService {
   getAll(
     query: VariantValueQueryParams,
     isAdmin?: boolean
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<VariantValue>> {
     return new Promise(async (resolve, _) => {
       try {
         const { withDeleted, variant, value, type } = query;
@@ -44,41 +32,41 @@ class VariantValueService {
           ...wherePagination,
           relations: { ...(variant ? { variant: true } : {}) },
         });
-        resolve({ data: { items: variantValues, count } });
+        resolve({ items: variantValues, count });
       } catch (error) {
         console.log("GET ALL VARIANT VALUES ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<VariantValue | null> {
     return new Promise(async (resolve, _) => {
       try {
         const variantValue = await this.getRepository().findOneBy({
           id,
         });
-        resolve({ data: variantValue });
+        resolve(variantValue);
       } catch (error) {
         console.log("GET VARIANT VALUE BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  createVariantValue(dto: CreateVariantValueDTO): Promise<ResponseData> {
+  createVariantValue(dto: CreateVariantValueDTO): Promise<VariantValue | null> {
     return new Promise(async (resolve, _) => {
       try {
         const newVariantValue = await this.getRepository().save(dto);
-        resolve({ data: newVariantValue });
+        resolve(newVariantValue);
       } catch (error) {
         console.log("CREATE VARIANT VALUE ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
   updateVariantValue(
     id: number,
     dto: Partial<CreateVariantValueDTO>
-  ): Promise<ResponseData> {
+  ): Promise<VariantValue | null> {
     return new Promise(async (resolve, _) => {
       try {
         const variantValue = await this.getRepository().findOneBy({
@@ -89,13 +77,12 @@ class VariantValueService {
             ...variantValue,
             ...dto,
           });
-          resolve({ data: newVariantValue });
+          resolve(variantValue);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE VARIANT VALUE ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
   softDeleteVariantValue(id: number): Promise<boolean> {
@@ -137,10 +124,10 @@ class VariantValueService {
         const count = await this.getRepository().count();
         if (count === 0) {
           variantService;
-          const { data: vColorData } = await variantService.getAll({
+          const vColorData = await variantService.getAll({
             name: "Màu sắc",
           });
-          const { data: vSizeData } = await variantService.getAll({
+          const vSizeData = await variantService.getAll({
             name: "Kích cỡ",
           });
 
@@ -222,4 +209,6 @@ class VariantValueService {
   }
 }
 
-export default new VariantValueService();
+const variantValueService = new VariantValueService();
+
+export default variantValueService;

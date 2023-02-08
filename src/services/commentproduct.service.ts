@@ -1,6 +1,7 @@
 import { Between, Not } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
-import CommentProduct from "../entities/commentproduct.entity";
+import CommentProduct from "../entities/commentProduct.entity";
 import {
   handleEqual,
   handleILike,
@@ -11,26 +12,12 @@ import {
   handleSort,
   lastDay,
 } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
+import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import {
+  CreateCommentProductDTO,
+  GetAllCommentProductQueryParams,
+} from "../utils/types/commentProduct";
 import productService from "./product.service";
-
-type CommentProductQueryParams = QueryParams &
-  Partial<{
-    productId: string;
-    q: string;
-    content: string;
-    star: string;
-    user: string;
-    depth: string;
-  }>;
-
-type CreateCommentProductDTO = {
-  productId: number;
-  content: string;
-  star: number;
-} & Partial<{
-  parentId: number;
-}>;
 
 class CommentProductService {
   getRepository() {
@@ -76,7 +63,7 @@ class CommentProductService {
     });
   }
 
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<CommentProduct | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOne({
@@ -85,21 +72,21 @@ class CommentProductService {
             user: true,
           },
         });
-        resolve({ data: item });
+        resolve(item);
       } catch (error) {
         console.log("GET COMMENT PRODUCT BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
   getAll(
-    query: CommentProductQueryParams,
+    query: GetAllCommentProductQueryParams,
     userId?: number
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<CommentProduct> & { userComment: CommentProduct | null }> {
     return new Promise(async (resolve, _) => {
       try {
-        const { productId, q, content, star, depth } = query;
+        const { productId, content, star, depth } = query;
         let userComment: CommentProduct | null = null;
         const { sort } = handleSort(query);
         const { wherePagination } = handlePagination(query);
@@ -110,7 +97,6 @@ class CommentProductService {
             ...handleILike("content", content),
             ...handleEqual("star", star, true),
             ...handleEqual("productId", productId, true),
-            ...handleSearchILike(["content"], q),
             ...handleSearchEqual(["star"], star),
             // ...(userId ? { userId: Not(userId) } : {}),
           },
@@ -122,15 +108,18 @@ class CommentProductService {
         if (userId && productId) {
           userComment = await this.checkUserCommentProduct(userId, +productId);
         }
-        resolve({ data: { items, count, userComment } });
+        resolve({ items, count, userComment });
       } catch (error) {
         console.log("GET ALL COMMENT PRODUCTS ERROR", error);
-        resolve({ error });
+        resolve({ ...EMPTY_ITEMS, userComment: null });
       }
     });
   }
 
-  create(userId: number, dto: CreateCommentProductDTO): Promise<ResponseData> {
+  create(
+    userId: number,
+    dto: CreateCommentProductDTO
+  ): Promise<CommentProduct | null> {
     return new Promise(async (resolve, _) => {
       try {
         let item = await this.getRepository().findOneBy({
@@ -142,16 +131,16 @@ class CommentProductService {
             ...dto,
             userId,
           });
-          resolve({ data: item });
+          resolve(item);
         } else {
           item = await this.getRepository().save({ ...item, ...dto });
         }
         await productService.updateStar(dto.productId);
-        const { data: newItem } = await this.getById(item.id);
-        resolve({ data: newItem });
+        const newItem = await this.getById(item.id);
+        resolve(newItem);
       } catch (error) {
         console.log("CREATE COMMENT PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
@@ -160,7 +149,7 @@ class CommentProductService {
     id: number,
     userId: number,
     dto: Partial<CommentProduct>
-  ): Promise<ResponseData> {
+  ): Promise<CommentProduct | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
@@ -169,18 +158,17 @@ class CommentProductService {
           if (dto.star) {
             await productService.updateStar(item.productId);
           }
-          const { data: newItem } = await this.getById(item.id);
-          resolve({ data: newItem });
+          const newItem = await this.getById(item.id);
+          resolve(newItem);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE COMMENT PRODUCT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
-  delete(id: number, userId: number): Promise<ResponseData> {
+  delete(id: number, userId: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
@@ -188,15 +176,16 @@ class CommentProductService {
           await this.getRepository().delete({ parentId: id });
           await this.getRepository().delete({ id });
           await productService.updateStar(item.productId);
-          resolve({});
+          resolve(true);
         }
-        resolve({ error: { message: "" } });
       } catch (error) {
         console.log("DELETE COMMENT PRODUCT ERROR", error);
-        resolve({ error });
       }
+      resolve(false);
     });
   }
 }
 
-export default new CommentProductService();
+const commentProductService = new CommentProductService();
+
+export default commentProductService;

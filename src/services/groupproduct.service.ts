@@ -1,8 +1,8 @@
 import { AppDataSource } from "../data-source";
 import GroupProduct, {
   GroupProductSexEnum,
-} from "../entities/groupproduct.entity";
-import { QueryParams, ResponseData, Sex } from "../utils/types";
+} from "../entities/groupProduct.entity";
+import { QueryParams, ResponseData, Gender } from "../utils/types";
 import {
   handleSort,
   handlePagination,
@@ -24,7 +24,7 @@ type CreateGroupProductDTO = {
   name: string;
   slug: string;
 } & Partial<{
-  sex: Sex;
+  sex: Gender;
   isAdult: boolean;
   thumbnail: string;
   description: string;
@@ -35,7 +35,7 @@ class GroupProductService {
     return AppDataSource.getRepository(GroupProduct);
   }
 
-  createSlug(name: string, sex?: Sex, isAdult?: boolean) {
+  createSlug(name: string, sex?: Gender, isAdult?: boolean) {
     let slug = slugify(name, { lower: true });
 
     if (sex === "Nam") slug += "-nam";

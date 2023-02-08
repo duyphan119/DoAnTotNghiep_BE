@@ -10,52 +10,22 @@ import {
   handleSort,
 } from "../utils";
 import Product from "../entities/product.entity";
-import { PaginationParams, QueryParams, ResponseData } from "../utils/types";
-import commentproductService from "./commentproduct.service";
-import orderItemService from "./orderitem.service";
-import productvariantService from "./productvariant.service";
-
-export type RelationQueryParams = Partial<{
-  product_variants: string;
-  images: string;
-}>;
-
-type ProductHasMinMaxPrice = Product & {
-  minPrice: number;
-  maxPrice: number;
-};
-
-type ProductQueryParams = QueryParams &
-  RelationQueryParams &
-  Partial<{
-    name: string;
-    slug: string;
-    group_product_slug: string;
-    group_product: string;
-    v_ids: string;
-    min_price: string;
-    max_price: string;
-    q: string;
-  }>;
-
-type CreateProductDTO = {
-  name: string;
-  groupProductId: number;
-  price: number;
-} & Partial<{
-  inventory: number;
-  thumbnail: string;
-  detail: string;
-  description: string;
-}>;
-
-export type BestSellerProduct = {
-  productId: number;
-  productName: string;
-  thumbnail: string;
-  inventory: number;
-  total: number;
-};
+import {
+  GetAll,
+  PaginationParams,
+  QueryParams,
+  ResponseData,
+} from "../utils/types";
+import commentProductService from "./commentProduct.service";
+import orderItemService from "./orderItem.service";
+import productVariantService from "./productVariant.service";
+import {
+  BestSellerProduct,
+  CreateProductDTO,
+  GetAllProductQueryParams,
+  ProductHasMinMaxPrice,
+} from "../utils/types/product";
+import { EMPTY_ITEMS } from "../constantList";
 
 class ProductService {
   getRepository() {
@@ -89,9 +59,9 @@ class ProductService {
   }
 
   getAllProducts(
-    query: ProductQueryParams,
+    query: GetAllProductQueryParams,
     isAdmin?: boolean
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<Product | ProductHasMinMaxPrice>> {
     return new Promise(async (resolve, _) => {
       try {
         const {
@@ -163,20 +133,20 @@ class ProductService {
               (a: ProductHasMinMaxPrice, b: ProductHasMinMaxPrice) =>
                 (a.minPrice - b.minPrice) * (sortType === "asc" ? 1 : -1)
             );
-          resolve({ data: { items: newProducts, count } });
+          resolve({ items: newProducts, count });
         } else {
-          resolve({ data: { items: products, count } });
+          resolve({ items: products, count });
         }
       } catch (error) {
         console.log("GET ALL PRODUCTS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
   searchProduct(
     query: PaginationParams & Partial<{ q: string }>
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<ProductHasMinMaxPrice>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = query;
@@ -200,26 +170,25 @@ class ProductService {
           maxPrice: this.price(product, "max"),
         })) as ProductHasMinMaxPrice[];
 
-        resolve({ data: { items: newProducts, count } });
+        resolve({ items: newProducts, count });
       } catch (error) {
         console.log("SEARCH PRODUCTS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<Product | null> {
     return new Promise(async (resolve, _) => {
       try {
         const product = await this.getRepository().findOneBy({ id });
         if (product) {
-          resolve({ data: product });
+          resolve(product);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE PRODUCT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
@@ -252,7 +221,7 @@ class ProductService {
     });
   }
 
-  createProduct(dto: CreateProductDTO): Promise<ResponseData> {
+  createProduct(dto: CreateProductDTO): Promise<Product | null> {
     return new Promise(async (resolve, _) => {
       try {
         const { name } = dto;
@@ -260,15 +229,15 @@ class ProductService {
           ...dto,
           slug: slugify(name, { lower: true }),
         });
-        resolve({ data: newProduct });
+        resolve(newProduct);
       } catch (error) {
         console.log("CREATE PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  updateProduct(id: number, dto: Partial<Product>): Promise<ResponseData> {
+  updateProduct(id: number, dto: Partial<Product>): Promise<Product | null> {
     return new Promise(async (resolve, _) => {
       try {
         const product = await this.getRepository().findOneBy({ id });
@@ -279,18 +248,16 @@ class ProductService {
             ...dto,
             ...(name ? { slug: slugify(name, { lower: true }) } : {}),
           });
-          resolve({ data: newProduct });
+          resolve(newProduct);
         }
-
-        resolve({});
       } catch (error) {
         console.log("UPDATE PRODUCT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
-  updateThumbnail(id: number, thumbnail: string): Promise<ResponseData> {
+  updateThumbnail(id: number, thumbnail: string): Promise<Product | null> {
     return new Promise(async (resolve, _) => {
       try {
         const product = await this.getRepository().findOneBy({ id });
@@ -299,75 +266,75 @@ class ProductService {
             ...product,
             thumbnail,
           });
-          resolve({ data: newProduct });
+          resolve(newProduct);
         }
-
-        resolve({});
       } catch (error) {
         console.log("UPDATE PRODUCT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
-  updateStar(id: number): Promise<any> {
+  updateStar(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
-        const { data } = await commentproductService.getAll({
+        const data = await commentProductService.getAll({
           productId: `${id}`,
         });
         if (data) {
           const { items } = data;
           const star = everageStar(items);
           await this.updateProduct(id, { star });
-          resolve({});
+          resolve(true);
         }
       } catch (error) {
         console.log("UPDATE PRODUCT STAR ERROR", error);
-        resolve({ error });
       }
+      resolve(false);
     });
   }
 
-  softDeleteProduct(id: number): Promise<ResponseData> {
+  softDeleteProduct(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  restoreProduct(id: number): Promise<ResponseData> {
+  restoreProduct(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 
-  deleteProduct(id: number): Promise<ResponseData> {
+  deleteProduct(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const product = await this.getRepository().findOneBy({ id });
         if (product) {
-          await productvariantService.deleteProductVariantByProduct(product.id);
+          await productVariantService.deleteProductVariantByProduct(product.id);
           await this.getRepository().delete({ id });
         }
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 }
 
-export default new ProductService();
+const productService = new ProductService();
+
+export default productService;

@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import Order from "./order.entity";
-import ProductVariant from "./productvariant.entity";
+import ProductVariant from "./productVariant.entity";
 
 @Entity({ name: "chitietdonhang" })
 class OrderItem {
@@ -56,56 +56,3 @@ class OrderItem {
   order: Order;
 }
 export default OrderItem;
-// @EventSubscriber()
-// export class OrderItemSubscriber
-//   implements EntitySubscriberInterface<OrderItem>
-// {
-//   listenTo() {
-//     return OrderItem;
-//   }
-
-//   async beforeInsert(event: InsertEvent<OrderItem>): Promise<any> {
-//     try {
-//       // if(!event.entity.orderId) {
-//       //   event.entity.orderId = await Order.create().id
-//       // }
-//       const existingOrderItem = await OrderItem.findOne({
-//         where: {
-//           productId: event.entity.productId,
-//           productVariantId: event.entity.productVariantId,
-//           orderId: event.entity.orderId,
-//         },
-//         relations: { product: true },
-//       });
-//       if (existingOrderItem) {
-//         event.entity.id = existingOrderItem.id;
-//         event.entity.createdAt = existingOrderItem.createdAt;
-//         event.entity.updatedAt = existingOrderItem.updatedAt;
-//         event.entity.quantity += existingOrderItem.quantity;
-//         event.entity.price = existingOrderItem.productVariant
-//           ? existingOrderItem.productVariant.price
-//           : existingOrderItem.product
-//           ? existingOrderItem.product.price
-//           : 0;
-//         event.entity.updatedAt = new Date();
-//         await OrderItem.delete({
-//           id: existingOrderItem.id,
-//         });
-//       } else {
-//         if (event.entity.productVariantId) {
-//           const productVariant = await ProductVariant.findOneBy({
-//             id: event.entity.productVariantId,
-//           });
-//           if (productVariant) event.entity.price = productVariant.price;
-//         } else {
-//           const product = await Product.findOneBy({
-//             id: event.entity.productId,
-//           });
-//           if (product) event.entity.price = product.price;
-//         }
-//       }
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   }
-// }

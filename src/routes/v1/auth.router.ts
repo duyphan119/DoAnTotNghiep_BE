@@ -2,18 +2,14 @@ import { Router } from "express";
 import authController from "../../controllers/auth.controller";
 import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter.get("/profile", getUser, authController.getProfile);
-authRouter.post("/login", authController.login);
-authRouter.post("/register", authController.register);
-authRouter.delete("/logout", authController.logout);
-authRouter.patch("/refresh", authController.refreshToken);
-authRouter.patch("/change-profile", requireLogin, authController.changeProfile);
-authRouter.patch(
-  "/change-password",
-  requireLogin,
-  authController.changePassword
-);
+router.get("/profile", getUser, authController.getProfile);
+router.post("/login", authController.login);
+router.post("/register", authController.register);
+router.delete("/logout", authController.logout);
+router.patch("/refresh", authController.refreshToken);
+router.patch("/change-profile", requireLogin, authController.changeProfile);
+router.patch("/change-password", requireLogin, authController.changePassword);
 
-export default authRouter;
+export default router;

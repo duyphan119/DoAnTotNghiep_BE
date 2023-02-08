@@ -10,11 +10,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import CommentProduct from "./commentproduct.entity";
+import CommentProduct from "./commentProduct.entity";
 import FavoriteProduct from "./favoriteproduct.entity";
-import GroupProduct from "./groupproduct.entity";
-import ProductVariant from "./productvariant.entity";
-import ProductVariantImage from "./productvariantimage.entity";
+import GroupProduct from "./groupProduct.entity";
+import ProductVariant from "./productVariant.entity";
+import ProductVariantImage from "./productVarianImage.entity";
 
 @Entity({ name: "mathang" })
 class Product {

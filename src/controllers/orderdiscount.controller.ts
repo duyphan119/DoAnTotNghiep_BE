@@ -6,7 +6,7 @@ import {
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
 } from "../constantList";
-import orderDiscountService from "../services/orderdiscount.service";
+import orderDiscountService from "../services/orderDiscount.service";
 
 class OrderDiscountController {
   async check(req: Request, res: Response) {
@@ -35,4 +35,6 @@ class OrderDiscountController {
   }
 }
 
-export default new OrderDiscountController();
+const orderDiscountController = new OrderDiscountController();
+
+export default orderDiscountController;

@@ -1,22 +1,13 @@
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
-import ProductVariant from "../entities/productvariant.entity";
-import VariantValue from "../entities/variantvalue.entity";
+import ProductVariant from "../entities/productVariant.entity";
+import VariantValue from "../entities/variantValue.entity";
 import { handlePagination, handleSort } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-
-export type ProductVariantQueryParams = QueryParams &
-  Partial<{
-    productId: string;
-    variant_values: string;
-  }>;
-
-export type CreateProductVariantDTO = {
-  productId: number;
-  price: number;
-  inventory: number;
-  name: string;
-  variantValues: VariantValue[];
-};
+import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import {
+  CreateProductVariantDTO,
+  GetAllProductVariantQueryParams,
+} from "../utils/types/productVariant";
 
 class ProductVariantService {
   getRepository() {
@@ -40,9 +31,9 @@ class ProductVariantService {
   }
 
   getAllProductVariants(
-    query: ProductVariantQueryParams,
+    query: GetAllProductVariantQueryParams,
     isAdmin?: boolean
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<ProductVariant>> {
     return new Promise(async (resolve, _) => {
       try {
         const { productId, variant_values, withDeleted } = query;
@@ -61,63 +52,67 @@ class ProductVariantService {
             withDeleted: isAdmin && withDeleted ? true : false,
           });
 
-        resolve({ data: { items: productVariants, count } });
+        resolve({ items: productVariants, count });
       } catch (error) {
         console.log("GET ALL PRODUCT VARIANTS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<ProductVariant | null> {
     return new Promise(async (resolve, _) => {
       try {
         const productVariant = await this.getRepository().findOneBy({
           id,
         });
-        resolve({ data: productVariant });
+        resolve(productVariant);
       } catch (error) {
         console.log("GET PRODUCT VARIANT BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  createProductVariant(dto: CreateProductVariantDTO): Promise<ResponseData> {
+  createProductVariant(
+    dto: CreateProductVariantDTO
+  ): Promise<ProductVariant | null> {
     return new Promise(async (resolve, _) => {
       try {
         const newProductVariant = await this.getRepository().save(dto);
-        resolve({ data: newProductVariant });
+        resolve(newProductVariant);
       } catch (error) {
         console.log("CREATE PRODUCT VARIANTS ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  createProductVariants(dto: CreateProductVariantDTO[]): Promise<ResponseData> {
+  createProductVariants(
+    dto: CreateProductVariantDTO[]
+  ): Promise<ProductVariant[]> {
     return new Promise(async (resolve, _) => {
       try {
         const newProductVariants = await this.getRepository().save(dto);
-        resolve({ data: { items: newProductVariants } });
+        resolve(newProductVariants);
       } catch (error) {
         console.log("CREATE PRODUCT VARIANTS ERROR", error);
-        resolve({ error });
+        resolve([]);
       }
     });
   }
   updateProductVariants(
     dto: Array<Partial<ProductVariant>>
-  ): Promise<ResponseData> {
+  ): Promise<Array<ProductVariant | null>> {
     return new Promise(async (resolve, _) => {
       try {
-        await Promise.all(
+        const items = await Promise.all(
           dto.map((input) => this.updateProductVariant(input.id || -1, input))
         );
-        resolve({});
+        resolve(items);
       } catch (error) {
         console.log("UPDATE PRODUCT VARIANTS ERROR", error);
-        resolve({ error });
+        resolve([]);
       }
     });
   }
@@ -125,7 +120,7 @@ class ProductVariantService {
   updateProductVariant(
     id: number,
     dto: Partial<ProductVariant>
-  ): Promise<ResponseData> {
+  ): Promise<ProductVariant | null> {
     return new Promise(async (resolve, _) => {
       try {
         const productVariant = await this.getRepository().findOneBy({
@@ -136,13 +131,12 @@ class ProductVariantService {
             ...productVariant,
             ...dto,
           });
-          resolve({ data: newProductVariant });
+          resolve(newProductVariant);
         }
-        resolve({ error: Error });
       } catch (error) {
         console.log("UPDATE PRODUCT VARIANT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
@@ -187,17 +181,19 @@ class ProductVariantService {
     });
   }
 
-  deleteProductVariantByProduct(productId: number): Promise<ResponseData> {
+  deleteProductVariantByProduct(productId: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ productId });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT BY PRODUCT ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 }
 
-export default new ProductVariantService();
+const productVariantService = new ProductVariantService();
+
+export default productVariantService;

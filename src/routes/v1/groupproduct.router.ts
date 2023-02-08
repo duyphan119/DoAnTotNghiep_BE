@@ -1,5 +1,5 @@
 import { Router } from "express";
-import groupProductController from "../../controllers/groupproduct.controller";
+import groupProductController from "../../controllers/groupProduct.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const groupProductRouter = Router();

@@ -11,7 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import ProductVariant from "./productvariant.entity";
+import ProductVariant from "./productVariant.entity";
 import Variant from "./variant.entity";
 
 @Entity({ name: "giatribienthe" })

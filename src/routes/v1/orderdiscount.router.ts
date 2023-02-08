@@ -1,11 +1,11 @@
 import { Router } from "express";
-import orderDiscountController from "../../controllers/orderdiscount.controller";
+import orderDiscountController from "../../controllers/orderDiscount.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
-const orderDiscountRouter = Router();
+const router = Router();
 
-// orderDiscountRouter.get("/seed", groupProductController.seed);
-orderDiscountRouter.get("/check", getUser, orderDiscountController.check);
-orderDiscountRouter.post("/", requireIsAdmin, orderDiscountController.create);
+// router.get("/seed", groupProductController.seed);
+router.get("/check", getUser, orderDiscountController.check);
+router.post("/", requireIsAdmin, orderDiscountController.create);
 
-export default orderDiscountRouter;
+export default router;

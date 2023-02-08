@@ -6,7 +6,7 @@ import {
   STATUS_OK,
   STATUS_UNAUTH,
 } from "../constantList";
-import groupproductService from "../services/groupproduct.service";
+import groupproductService from "../services/groupProduct.service";
 
 class GroupProductController {
   async getAll(req: Request, res: Response) {

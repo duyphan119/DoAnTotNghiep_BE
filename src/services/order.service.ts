@@ -1,34 +1,15 @@
 import { Between, IsNull, Not } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Order, { OrderStatusEnum } from "../entities/order.entity";
-import OrderItem from "../entities/orderitem.entity";
+import OrderItem from "../entities/orderItem.entity";
 import { handlePagination, handleSort, lastDay } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-import orderItemService from "./orderitem.service";
-import productVariantService from "./productvariant.service";
+import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import { CreateOrderDTO, GetAllOrderQueryParams } from "../utils/types/order";
+import orderItemService from "./orderItem.service";
+import productVariantService from "./productVariant.service";
 import userService from "./user.service";
-import userAddressService from "./useraddress.service";
-
-type OrderQueryParams = QueryParams &
-  Partial<{
-    start: string;
-    end: string;
-    address: string;
-    fullName: string;
-    items: string;
-  }>;
-
-type CheckoutDTO = {
-  province: string;
-  district: string;
-  ward: string;
-  address: string;
-  paymentMethod: string;
-  shippingPrice: number;
-  fullName: string;
-  phone: string;
-  point?: number;
-};
+import userAddressService from "./userAddress.service";
 
 class OrderService {
   getRepository() {
@@ -101,11 +82,11 @@ class OrderService {
     });
   }
   getAllOrders(
-    query: OrderQueryParams,
+    query: GetAllOrderQueryParams,
     isCart: boolean,
     isAdmin: boolean,
     userId?: number
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<Order>> {
     return new Promise(async (resolve, _) => {
       try {
         const { items, withDeleted } = query;
@@ -134,14 +115,14 @@ class OrderService {
             ...(userId ? { userId } : {}),
           },
         });
-        resolve({ data: { items: orders, count } });
+        resolve({ items: orders, count });
       } catch (error) {
         console.log("GET ALL ORDERS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
-  getOrderById(id: number): Promise<ResponseData> {
+  getOrderById(id: number): Promise<Order | null> {
     return new Promise(async (resolve, _) => {
       try {
         const order = await this.getRepository().findOne({
@@ -156,21 +137,20 @@ class OrderService {
             discount: true,
           },
         });
-        resolve({ data: order });
+        resolve(order);
       } catch (error) {
         console.log("GET ORDER BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  createCart(userId: number): Promise<ResponseData> {
+  createCart(userId: number): Promise<Order | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const { data: user } = await userService.getById(userId);
-        const { data: userAddressData } = await userAddressService.getByUserId(
-          userId,
-          { limit: "1" }
-        );
+        const user = await userService.getById(userId);
+        const userAddressData = await userAddressService.getByUserId(userId, {
+          limit: "1",
+        });
         if (user) {
           const userAddress = userAddressData?.items[0];
           const cart = await this.getRepository().save({
@@ -186,19 +166,18 @@ class OrderService {
                 }
               : {}),
           });
-          resolve({ data: cart });
+          resolve(cart);
         }
-        resolve({});
       } catch (error) {
         console.log("CREATE CART ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
   getUserPoint(userId: number): Promise<number> {
     return new Promise(async (resolve, _) => {
       try {
-        const { data: user } = await userService.getById(userId);
+        const user = await userService.getById(userId);
 
         if (user) {
           resolve(user.point);
@@ -210,7 +189,7 @@ class OrderService {
       resolve(0);
     });
   }
-  checkout(userId: number, dto: CheckoutDTO): Promise<ResponseData> {
+  checkout(userId: number, dto: CreateOrderDTO): Promise<Order | null> {
     return new Promise(async (resolve, _) => {
       try {
         const { point: pointDTO, ...otherDto } = dto;
@@ -256,12 +235,11 @@ class OrderService {
             });
           }
 
-          resolve({ data: newOrder });
+          resolve(newOrder);
         }
-        resolve({});
       } catch (error) {
         console.log("CHECKOUT ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
@@ -408,10 +386,10 @@ class OrderService {
       }
     });
   }
-  updateStatus(id: number): Promise<ResponseData> {
+  updateStatus(id: number): Promise<Order | null> {
     return new Promise(async (resolve, _) => {
       try {
-        let { data: order } = await this.getOrderById(id);
+        let order = await this.getOrderById(id);
         console.log("order:::", order);
         if (order) {
           const { allowCannceled, isPaid, isOrdered } = order;
@@ -439,15 +417,16 @@ class OrderService {
             }
           }
           const newOrder = await this.getRepository().save(order);
-          resolve({ data: newOrder });
+          resolve(newOrder);
         }
-        resolve({ error: new Error() });
       } catch (error) {
         console.log("CHECKOUT ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 }
 
-export default new OrderService();
+const orderService = new OrderService();
+
+export default orderService;

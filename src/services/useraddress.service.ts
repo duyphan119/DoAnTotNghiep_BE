@@ -1,25 +1,27 @@
 import { IsNull, Not } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
-import UserAddress from "../entities/useraddress.entity";
+import UserAddress from "../entities/userAddress.entity";
 import { handlePagination } from "../utils";
-import { PaginationParams, ResponseData } from "../utils/types";
+import { GetAll, PaginationParams } from "../utils/types";
+import { CreateUserAddressDTO } from "../utils/types/userAddress";
 
-export type CreateUserAddressDTO = {
-  province: string;
-  district: string;
-  ward: string;
-  address: string;
-};
 class UserAddressService {
   getRepository() {
     return AppDataSource.getRepository(UserAddress);
   }
 
-  getByDTO(userId: number, dto: CreateUserAddressDTO) {
+  getByDTO(
+    userId: number,
+    dto: CreateUserAddressDTO
+  ): Promise<UserAddress | null> {
     return this.getRepository().findOneBy({ userId, ...dto });
   }
 
-  getByUserId(userId: number, query: PaginationParams): Promise<ResponseData> {
+  getByUserId(
+    userId: number,
+    query: PaginationParams
+  ): Promise<GetAll<UserAddress>> {
     return new Promise(async (resolve, _) => {
       try {
         const { wherePagination } = handlePagination(query);
@@ -33,27 +35,27 @@ class UserAddressService {
           },
           ...wherePagination,
         });
-        resolve({ data: { items: groupProducts, count } });
+        resolve({ items: groupProducts, count });
       } catch (error) {
         console.log("GET ALL USER ADDRESS BY USER ID ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
   createUserAddress(
     userId: number,
     dto: CreateUserAddressDTO
-  ): Promise<ResponseData> {
+  ): Promise<UserAddress | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const newGroupProduct = await this.getRepository().save({
+        const newItem = await this.getRepository().save({
           ...dto,
           userId,
         });
-        resolve({ data: newGroupProduct });
+        resolve(newItem);
       } catch (error) {
         console.log("CREATE USER ADDRESS ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
@@ -61,7 +63,7 @@ class UserAddressService {
     id: number,
     userId: number,
     dto: Partial<CreateUserAddressDTO>
-  ): Promise<ResponseData> {
+  ): Promise<UserAddress | null> {
     return new Promise(async (resolve, _) => {
       try {
         const userAddress = await this.getRepository().findOneBy({
@@ -73,26 +75,27 @@ class UserAddressService {
             ...userAddress,
             ...dto,
           });
-          resolve({ data: newUserAddress });
+          resolve(newUserAddress);
         }
-        resolve({});
       } catch (error) {
         console.log("UPDATE USER ADDRESS ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
-  deleteUserAddress(id: number, userId: number): Promise<ResponseData> {
+  deleteUserAddress(id: number, userId: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id, userId });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE USER ADDRESS ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
 }
 
-export default new UserAddressService();
+const userAddressService = new UserAddressService();
+
+export default userAddressService;

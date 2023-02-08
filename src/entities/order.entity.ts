@@ -16,8 +16,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import OrderDiscount from "./orderdiscount.entity";
-import OrderItem from "./orderitem.entity";
+import OrderDiscount from "./orderDiscount.entity";
+import OrderItem from "./orderItem.entity";
 import User from "./user.entity";
 
 export enum OrderStatusEnum {

@@ -1,5 +1,6 @@
 import * as bcrypt from "bcrypt";
 import { Between } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import User from "../entities/user.entity";
 import {
@@ -9,22 +10,8 @@ import {
   handleSort,
   lastDay,
 } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-
-type UserQueryParams = QueryParams &
-  Partial<{
-    fullName: string;
-    phone: string;
-    email: string;
-    q: string;
-  }>;
-
-type CreateUserDTO = {
-  fullName: string;
-  phone: string;
-  email: string;
-  password: string;
-};
+import { GetAll, ResponseData } from "../utils/types";
+import { CreateUserDTO, GetAllUserQueryParams } from "../utils/types/user";
 
 class UserService {
   getRepository() {
@@ -82,12 +69,12 @@ class UserService {
     });
   }
   getAllUsers(
-    query: UserQueryParams,
+    query: GetAllUserQueryParams,
     isAdmin?: boolean
-  ): Promise<ResponseData> {
+  ): Promise<GetAll<User>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { fullName, phone, email, q, withDeleted } = query;
+        const { fullName, phone, email, withDeleted } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [users, count] = await this.getRepository().findAndCount({
@@ -97,7 +84,6 @@ class UserService {
             ...handleILike("fullName", fullName),
             ...handleILike("phone", phone),
             ...handleILike("email", email),
-            ...handleSearchILike(["fullName", "phone", "email"], q),
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
@@ -111,69 +97,68 @@ class UserService {
             updatedAt: true,
           },
         });
-        resolve({ data: { items: users, count } });
+        resolve({ items: users, count });
       } catch (error) {
         console.log("GET ALL USERS ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
         const user = await this.getRepository().findOneBy({ id });
-        resolve(user ? { data: user } : {});
+        resolve(user);
       } catch (error) {
         console.log("GET USER BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  getByEmail(email: string): Promise<ResponseData> {
+  getByEmail(email: string): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
         const user = await this.getRepository().findOneBy({ email });
-        resolve(user ? { data: user } : {});
+        resolve(user);
       } catch (error) {
         console.log("GET USER BY EMAIL ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
-  createUser(dto: CreateUserDTO): Promise<ResponseData> {
+  createUser(dto: CreateUserDTO): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const newUser = await this.getRepository().save({
+        const newItem = await this.getRepository().save({
           ...dto,
           password: await this.hashPassword(dto.password),
         });
-        resolve({ data: newUser });
+        resolve(newItem);
       } catch (error) {
-        console.log("CREATE USER BY EMAIL ERROR", error);
-        resolve({ error });
+        console.log("CREATE USER ERROR", error);
+        resolve(null);
       }
     });
   }
-  updateUser(id: number, dto: Partial<CreateUserDTO>): Promise<ResponseData> {
+  updateUser(id: number, dto: Partial<CreateUserDTO>): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
         const user = await this.getRepository().findOneBy({ id });
         if (user) {
           const newUser = await this.getRepository().save({ ...user, ...dto });
-          resolve({ data: newUser });
+          resolve(newUser);
         }
-        resolve({});
       } catch (error) {
         console.log("GET USER BY EMAIL ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
   changePassword(
     id: number,
     newPassword: string,
     oldPassword: string
-  ): Promise<ResponseData> {
+  ): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         const user = await this.getRepository().findOneBy({ id });
@@ -183,50 +168,49 @@ class UserService {
             user.password
           );
           if (compareResult) {
-            const newUser = await this.getRepository().save({
+            await this.getRepository().save({
               ...user,
               password: await this.hashPassword(newPassword),
             });
-            resolve({ data: newUser });
+            resolve(true);
           }
         }
-        resolve({});
       } catch (error) {
         console.log("GET USER BY EMAIL ERROR", error);
-        resolve({ error });
       }
+      resolve(false);
     });
   }
-  softDeleteUser(id: number): Promise<ResponseData> {
+  softDeleteUser(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().softDelete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("SOFT DELETE USER ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  restoreUser(id: number): Promise<ResponseData> {
+  restoreUser(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().restore({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("RESTORE USER ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
-  deleteUser(id: number): Promise<ResponseData> {
+  deleteUser(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
         await this.getRepository().delete({ id });
-        resolve({});
+        resolve(true);
       } catch (error) {
         console.log("DELETE USER ERROR", error);
-        resolve({ error });
+        resolve(false);
       }
     });
   }
@@ -255,4 +239,5 @@ class UserService {
   }
 }
 
-export default new UserService();
+const userService = new UserService();
+export default userService;

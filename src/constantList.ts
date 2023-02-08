@@ -8,6 +8,7 @@ export const OK = "OK";
 export const STATUS_OK = 200;
 export const STATUS_CREATED = 201;
 export const STATUS_UNAUTH = 401;
+export const STATUS_NOTFOUND = 404;
 export const STATUS_INTERVAL_ERROR = 500;
 export const MSG_SUCCESS = "Success";
 export const MSG_ERROR = "Error";
@@ -18,3 +19,4 @@ export const COOKIE_REFRESH_TOKEN_OPTIONS: CookieOptions = {
   sameSite: "lax",
   domain: __prod__ ? ".vercel.app" : undefined,
 };
+export const EMPTY_ITEMS = { items: [], count: 0 };

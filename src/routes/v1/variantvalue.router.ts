@@ -1,36 +1,28 @@
 import { Router } from "express";
-import variantValueController from "../../controllers/variantvalue.controller";
+import variantValueController from "../../controllers/variantValue.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
-const variantValueRouter = Router();
+const router = Router();
 
-variantValueRouter.get("/seed", variantValueController.seed);
-variantValueRouter.get("/:id", variantValueController.getById);
-variantValueRouter.get("/", getUser, variantValueController.getAll);
-variantValueRouter.post(
-  "/",
-  requireIsAdmin,
-  variantValueController.createVariantValue
-);
-variantValueRouter.patch(
-  "/:id",
-  requireIsAdmin,
-  variantValueController.updateVariantValue
-);
-variantValueRouter.delete(
+router.get("/seed", variantValueController.seed);
+router.get("/:id", variantValueController.getById);
+router.get("/", getUser, variantValueController.getAll);
+router.post("/", requireIsAdmin, variantValueController.createVariantValue);
+router.patch("/:id", requireIsAdmin, variantValueController.updateVariantValue);
+router.delete(
   "/soft/:id",
   requireIsAdmin,
   variantValueController.softDeleteVariantValue
 );
-variantValueRouter.delete(
+router.delete(
   "/restore/:id",
   requireIsAdmin,
   variantValueController.restoreVariantValue
 );
-variantValueRouter.delete(
+router.delete(
   "/:id",
   requireIsAdmin,
   variantValueController.deleteVariantValue
 );
 
-export default variantValueRouter;
+export default router;

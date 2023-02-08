@@ -1,5 +1,5 @@
 import { Router } from "express";
-import productvariantController from "../../controllers/productvariant.controller";
+import productvariantController from "../../controllers/productVariant.controller";
 import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const productVariantRouter = Router();

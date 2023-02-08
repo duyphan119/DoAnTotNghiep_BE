@@ -1,25 +1,22 @@
 import { In } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
-import SettingWebsite from "../entities/settingwebsite.entity";
+import SettingWebsite from "../entities/settingWebsite.entity";
 import { handleEqual } from "../utils";
-import { QueryParams, ResponseData } from "../utils/types";
-
-type SettingWebsiteDTO = {
-  key: string;
-  value: string;
-};
-
-type SettingWebsiteQueryParams = Partial<{
-  key: string;
-}> &
-  QueryParams;
+import { GetAll, ResponseData } from "../utils/types";
+import {
+  CreateSettingWebsiteDTO,
+  GetAllSettingWebsiteQueryParams,
+} from "../utils/types/settingWebsite";
 
 class SettingWebsiteService {
   getRepository() {
     return AppDataSource.getRepository(SettingWebsite);
   }
 
-  getAll(query: SettingWebsiteQueryParams): Promise<ResponseData> {
+  getAll(
+    query: GetAllSettingWebsiteQueryParams
+  ): Promise<GetAll<SettingWebsite>> {
     return new Promise(async (resolve, _) => {
       try {
         const { key } = query;
@@ -28,54 +25,53 @@ class SettingWebsiteService {
             ...handleEqual("key", key),
           },
         });
-        resolve({ data: { items, count } });
+        resolve({ items, count });
       } catch (error) {
         console.log("GET ALL SETTING WEBSITE ERROR", error);
-        resolve({ error });
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
-  getById(id: number): Promise<ResponseData> {
+  getById(id: number): Promise<SettingWebsite | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
-        resolve({ data: item });
+        resolve(item);
       } catch (error) {
         console.log("GET SETTING WEBSITE BY ID ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
-  createOne(dto: SettingWebsiteDTO): Promise<ResponseData> {
+  createOne(dto: CreateSettingWebsiteDTO): Promise<SettingWebsite | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().save(dto);
-        resolve({ data: item });
+        resolve(item);
       } catch (error) {
         console.log("CREATE SETTING WEBSITE ERROR", error);
-        resolve({ error });
+        resolve(null);
       }
     });
   }
 
   updateOne(
     id: number,
-    dto: Partial<SettingWebsiteDTO>
-  ): Promise<ResponseData> {
+    dto: Partial<CreateSettingWebsiteDTO>
+  ): Promise<SettingWebsite | null> {
     return new Promise(async (resolve, _) => {
       try {
         const item = await this.getRepository().findOneBy({ id });
         if (item) {
           const newItem = await this.getRepository().save({ ...item, ...dto });
-          resolve({ data: newItem });
+          resolve(newItem);
         }
-        resolve({ data: null });
       } catch (error) {
         console.log("UPDATE SETTING WEBSITE ERROR", error);
-        resolve({ error });
       }
+      resolve(null);
     });
   }
 
@@ -91,7 +87,7 @@ class SettingWebsiteService {
     });
   }
 
-  getByKeys(keys: string[]): Promise<any> {
+  getByKeys(keys: string[]): Promise<GetAll<SettingWebsite>> {
     return new Promise(async (resolve, _) => {
       try {
         const [items, count] = await this.getRepository().findAndCount({
@@ -104,9 +100,10 @@ class SettingWebsiteService {
           },
         });
 
-        resolve({ data: { items, count } });
+        resolve({ items, count });
       } catch (error) {
         console.log("GET SETTING WEBSITE BY KEYS", error);
+        resolve(EMPTY_ITEMS);
       }
     });
   }
@@ -133,4 +130,6 @@ class SettingWebsiteService {
   }
 }
 
-export default new SettingWebsiteService();
+const settingWebsiteService = new SettingWebsiteService();
+
+export default settingWebsiteService;

@@ -5,13 +5,13 @@ import {
   requireLogin,
 } from "../../middlewares/auth.middleware";
 
-const orderRouter = Router();
+const order = Router();
 
-// orderRouter.get("/seed", groupProductController.seed);
-orderRouter.get("/user", requireLogin, orderController.getOrdersUser);
-orderRouter.get("/:id", requireIsAdmin, orderController.getOrderById);
-orderRouter.get("/", requireIsAdmin, orderController.getAllOrders);
-orderRouter.patch("/checkout", requireLogin, orderController.checkout);
-orderRouter.patch("/:id/status", requireIsAdmin, orderController.updateStatus);
+// order.get("/seed", groupProductController.seed);
+order.get("/user", requireLogin, orderController.getOrdersUser);
+order.get("/:id", requireIsAdmin, orderController.getOrderById);
+order.get("/", requireIsAdmin, orderController.getAllOrders);
+order.patch("/checkout", requireLogin, orderController.checkout);
+order.patch("/:id/status", requireIsAdmin, orderController.updateStatus);
 
-export default orderRouter;
+export default order;
