@@ -2,6 +2,7 @@ import { Router } from "express";
 import advertisementRouter from "./advertisement.router";
 import authRouter from "./auth.router";
 import blogRouter from "./blog.router";
+import blogCategoryRouter from "./blogCategory.router";
 import cartRouter from "./cart.router";
 import commentProductRouter from "./commentProduct.router";
 import groupProductRouter from "./groupProduct.router";
@@ -18,9 +19,11 @@ import userRouter from "./user.router";
 import userAddressRouter from "./userAddress.router";
 import variantRouter from "./variant.router";
 import variantValueRouter from "./variantValue.router";
+import repCommentProductRouter from "./repCommentProduct.router";
 
 const v1Router = Router();
 
+v1Router.use("/blog-category", blogCategoryRouter);
 v1Router.use("/blog", blogRouter);
 v1Router.use("/group-product", groupProductRouter);
 v1Router.use("/user-address", userAddressRouter);
@@ -40,5 +43,6 @@ v1Router.use("/notification", notifyRouter);
 v1Router.use("/order-discount", orderDiscountRouter);
 v1Router.use("/setting-website", settingWensiteRouter);
 v1Router.use("/statistics", statisticsRouter);
+v1Router.use("/rep-comment-product", repCommentProductRouter);
 
 export default v1Router;

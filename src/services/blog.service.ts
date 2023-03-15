@@ -2,7 +2,12 @@ import slugify from "slugify";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Blog from "../entities/blog.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
+import {
+  handleEqual,
+  handleILike,
+  handlePagination,
+  handleSort,
+} from "../utils";
 import { GetAll, ResponseData } from "../utils/types";
 import { CreateBlogDTO, GetAllBlogQueryParams } from "../utils/types/blog";
 
@@ -16,18 +21,33 @@ class BlogService {
   ): Promise<GetAll<Blog>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, title, slug, content } = query;
+        const { withDeleted, title, slug, content, heading, blogCategoryId } =
+          query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
         const [blogs, count] = await this.getRepository().findAndCount({
           order: sort,
           where: {
+            ...handleILike("heading", heading),
             ...handleILike("title", title),
             ...handleILike("slug", slug),
             ...handleILike("content", content),
+            ...handleEqual("blogCategoryId", blogCategoryId),
           },
           withDeleted: isAdmin && withDeleted ? true : false,
           ...wherePagination,
+          select: {
+            id: true,
+            title: true,
+            userId: true,
+            createdAt: true,
+            updatedAt: true,
+            heading: true,
+            thumbnail: true,
+            slug: true,
+            blogCategoryId: true,
+            ...(slug ? { content: true } : {}),
+          },
         });
         resolve({ items: blogs, count });
       } catch (error) {
@@ -54,7 +74,7 @@ class BlogService {
         const newBlog = await this.getRepository().save({
           ...dto,
           userId,
-          slug: slugify(title, { lower: true }),
+          slug: slugify(title, { lower: true, locale: "vi" }),
         });
         resolve(newBlog);
       } catch (error) {
@@ -76,7 +96,9 @@ class BlogService {
           const newBlog = await this.getRepository().save({
             ...blog,
             ...dto,
-            ...(title ? { slug: slugify(title, { lower: true }) } : {}),
+            ...(title
+              ? { slug: slugify(title, { lower: true, locale: "vi" }) }
+              : {}),
           });
           resolve(newBlog);
         }

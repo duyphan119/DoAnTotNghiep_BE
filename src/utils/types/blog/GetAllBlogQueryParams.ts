@@ -5,6 +5,8 @@ type GetAllBlogQueryParams = QueryParams &
     title: string;
     slug: string;
     content: string;
+    heading: string;
+    blogCategoryId: string;
   }>;
 
 export default GetAllBlogQueryParams;

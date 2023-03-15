@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { __prod__ } from "./constantList";
 import { ProductVariantSubscriber } from "./entities/productVariant.entity";
+
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "localhost",
@@ -21,7 +22,7 @@ export const AppDataSource = new DataSource({
         username: process.env.DB_USERNAME_DEV || "postgres",
         password: process.env.DB_PASSWORD_DEV || "duychomap710",
         database: "DoAnTotNghiep",
-        synchronize: false,
+        synchronize: true,
       }),
   logging: false,
   entities: [path.join(__dirname, "/entities/*")],

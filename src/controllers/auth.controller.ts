@@ -18,7 +18,7 @@ class AuthController {
     const user = await userService.getByEmail(email);
     let message = "Email is available";
     if (!user) {
-      const newUser = await userService.createUser(req.body);
+      const newUser = await userService.createOne(req.body);
       if (newUser) {
         const payload = {
           id: newUser.id,
@@ -91,8 +91,8 @@ class AuthController {
           .json({ data: { accessToken }, message: MSG_SUCCESS });
       }
       return res
-        .status(STATUS_INTERVAL_ERROR)
-        .json({ error: { message: "Token is invalid" } });
+        .status(STATUS_OK)
+        .json({ message: "Token is invalid", data: null });
     } catch (error) {
       console.log("REFRESH TOKEN ERROR", error);
       return res.status(STATUS_INTERVAL_ERROR).json({ error });
@@ -115,7 +115,7 @@ class AuthController {
   async changeProfile(req: Request, res: Response) {
     const userId = +res.locals.user.id;
 
-    const data = await userService.updateUser(userId, req.body);
+    const data = await userService.updateOne(userId, req.body);
 
     if (!data) {
       return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });

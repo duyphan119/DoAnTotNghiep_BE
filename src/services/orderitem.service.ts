@@ -95,17 +95,14 @@ class OrderItemService {
     });
   }
 
-  updateOrderItem(
-    id: number,
-    dto: Partial<OrderItem>
-  ): Promise<OrderItem | null> {
+  updateOrderItem(id: number, newQuantity: number): Promise<OrderItem | null> {
     return new Promise(async (resolve, _) => {
       try {
         const orderItem = await this.getRepository().findOneBy({ id });
         if (orderItem) {
           const newOrderItem = await this.getRepository().save({
             ...orderItem,
-            ...dto,
+            quantity: newQuantity,
           });
           resolve(newOrderItem);
         }

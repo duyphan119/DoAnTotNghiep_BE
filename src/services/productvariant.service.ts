@@ -8,6 +8,8 @@ import {
   CreateProductVariantDTO,
   GetAllProductVariantQueryParams,
 } from "../utils/types/productVariant";
+import orderService from "./order.service";
+import orderItemService from "./orderItem.service";
 
 class ProductVariantService {
   getRepository() {
@@ -171,6 +173,7 @@ class ProductVariantService {
           where: { id },
           relations: { variantValues: true },
         });
+
         await this.getRepository().save({ ...item, variantValues: [] });
         await this.getRepository().delete({ id });
         resolve(true);
@@ -184,6 +187,13 @@ class ProductVariantService {
   deleteProductVariantByProduct(productId: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
+        const items = await this.getRepository().find({
+          where: { productId },
+          relations: { variantValues: true },
+        });
+        await this.getRepository().save(
+          items.map((item) => ({ ...item, variantValues: [] }))
+        );
         await this.getRepository().delete({ productId });
         resolve(true);
       } catch (error) {

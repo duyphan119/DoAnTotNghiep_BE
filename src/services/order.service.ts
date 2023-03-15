@@ -252,6 +252,7 @@ class OrderService {
               new Date(`${year}-${month}-01`),
               new Date(`${year}-${month}-${lastDay(month, year)}`)
             ),
+            status: OrderStatusEnum.DELIVERED,
           },
         });
 

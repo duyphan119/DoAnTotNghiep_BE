@@ -1,42 +1,283 @@
+import slugify from "slugify";
+import { ILike, In, Not } from "typeorm";
+import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import GroupProduct, {
   GroupProductSexEnum,
 } from "../entities/groupProduct.entity";
-import { QueryParams, ResponseData, Gender } from "../utils/types";
+import { handleILike, handlePagination, handleSort } from "../utils";
+import { ICrudService } from "../utils/interfaces";
+import { Gender, GetAll, SearchParams } from "../utils/types";
 import {
-  handleSort,
-  handlePagination,
-  handleILike,
-  handleSearchILike,
-} from "../utils";
-import slugify from "slugify";
+  CreateGroupProductDTO,
+  GetAllGroupProductQueryParams,
+} from "../utils/types/groupProduct";
+import seedGroupProducts from "../seeds/group-product";
 
-type GroupProductQueryParams = QueryParams &
-  Partial<{
-    name: string;
-    slug: string;
-    description: string;
-    q: string;
-    forHeader: string;
-  }>;
+class GroupProductService
+  implements
+    ICrudService<
+      | GetAll<GroupProduct>
+      | {
+          name: string;
+          slug: string;
+          items: GroupProduct[];
+        }[],
+      GroupProduct,
+      GetAllGroupProductQueryParams,
+      CreateGroupProductDTO,
+      Partial<CreateGroupProductDTO>
+    >
+{
+  getAll(params: GetAllGroupProductQueryParams): Promise<
+    | GetAll<GroupProduct>
+    | {
+        name: string;
+        slug: string;
+        items: GroupProduct[];
+      }[]
+  > {
+    return new Promise(async (resolve, _) => {
+      try {
+        const {
+          name,
+          slug,
+          description,
+          q,
+          forHeader,
+          relatedSlug,
+          requireThumbnail,
+        } = params;
+        const { wherePagination } = handlePagination(params);
+        const { sort } = handleSort(params);
+        if (forHeader) {
+          const itemsFemale = await this.getRepository().find({
+            where: { sex: GroupProductSexEnum.FEMALE },
+            order: { name: "asc" },
+          });
+          const itemsMale = await this.getRepository().find({
+            where: { sex: GroupProductSexEnum.MALE },
+            order: { name: "asc" },
+          });
+          const itemsGirl = await this.getRepository().find({
+            where: { sex: GroupProductSexEnum.FEMALE, isAdult: false },
+            order: { name: "asc" },
+          });
+          const itemsBoy = await this.getRepository().find({
+            where: { sex: GroupProductSexEnum.MALE, isAdult: false },
+            order: { name: "asc" },
+          });
 
-type CreateGroupProductDTO = {
-  name: string;
-  slug: string;
-} & Partial<{
-  sex: Gender;
-  isAdult: boolean;
-  thumbnail: string;
-  description: string;
-}>;
+          resolve([
+            {
+              name: GroupProductSexEnum.FEMALE,
+              slug: slugify(GroupProductSexEnum.FEMALE, {
+                lower: true,
+                locale: "vi",
+              }),
+              items: itemsFemale,
+            },
+            {
+              name: GroupProductSexEnum.MALE,
+              slug: slugify(GroupProductSexEnum.MALE, {
+                lower: true,
+                locale: "vi",
+              }),
+              items: itemsMale,
+            },
+            {
+              name: "Bé gái",
+              slug: slugify("Bé gái", { lower: true, locale: "vi" }),
+              items: itemsGirl,
+            },
+            {
+              name: "Bé trai",
+              slug: slugify("Bé trai", { lower: true, locale: "vi" }),
+              items: itemsBoy,
+            },
+          ]);
+        } else {
+          if (q) {
+            resolve(await this.search(params));
+          } else if (relatedSlug) {
+            resolve(await this.getRelatied(params));
+          } else {
+            const [groupProducts, count] =
+              await this.getRepository().findAndCount({
+                order: sort,
+                where: {
+                  ...handleILike("name", name),
+                  ...handleILike("slug", slug),
+                  ...handleILike("description", description),
+                  ...(requireThumbnail ? { thumbnail: Not("") } : {}),
+                },
+                ...wherePagination,
+              });
+            resolve({ items: groupProducts, count });
+          }
+        }
+      } catch (error) {
+        console.log("GroupProductService.getAll error", error);
+      }
+      resolve(EMPTY_ITEMS);
+    });
+  }
 
-class GroupProductService {
+  getById(id: number): Promise<GroupProduct | null> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const variant = await this.getRepository().findOneBy({ id });
+        resolve(variant);
+      } catch (error) {
+        console.log("GroupProductService.getById error", error);
+        resolve(null);
+      }
+    });
+  }
+  createOne(dto: CreateGroupProductDTO): Promise<GroupProduct | null> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const newItem = await this.getRepository().save({
+          ...dto,
+          slug: this.createSlug(dto.name, dto.sex, dto.isAdult),
+        });
+        resolve(newItem);
+      } catch (error) {
+        console.log("GroupProductService.createOne", error);
+        resolve(null);
+      }
+    });
+  }
+  createMany(listDto: CreateGroupProductDTO[]): Promise<GroupProduct[]> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const newItems = await this.getRepository().save(
+          listDto.map((dto) => ({
+            ...dto,
+            slug: this.createSlug(dto.name, dto.sex, dto.isAdult),
+          }))
+        );
+        resolve(newItems);
+      } catch (error) {
+        console.log("GroupProductService.createMany error", error);
+        resolve([]);
+      }
+    });
+  }
+  updateOne(
+    id: number,
+    dto: Partial<CreateGroupProductDTO>
+  ): Promise<GroupProduct | null> {
+    return new Promise(async (resolve, _) => {
+      try {
+        let existingItem = await this.getRepository().findOneBy({ id });
+        if (existingItem && dto.name !== existingItem.name) {
+          existingItem = { ...existingItem, ...dto };
+          resolve(
+            await this.getRepository().save({
+              ...existingItem,
+              slug: this.createSlug(
+                existingItem.name,
+                existingItem.sex as Gender,
+                existingItem.isAdult
+              ),
+            })
+          );
+        }
+        resolve(null);
+      } catch (error) {
+        console.log("GroupProductService.updateOne error", error);
+      }
+      resolve(null);
+    });
+  }
+  updateMany(
+    inputs: ({ id: number } & Partial<CreateGroupProductDTO>)[]
+  ): Promise<GroupProduct[]> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const results = await Promise.all(
+          inputs.map(({ id, ...dto }) => this.updateOne(id, dto))
+        );
+        resolve(results.filter((result) => result) as GroupProduct[]);
+      } catch (error) {
+        console.log("GroupProductService.updateMany error", error);
+        resolve([]);
+      }
+    });
+  }
+  deleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.deleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  deleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.deleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.softDeleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.softDeleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(id);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.restoreOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("GroupProductService.restoreMany error", error);
+        resolve(false);
+      }
+    });
+  }
   getRepository() {
     return AppDataSource.getRepository(GroupProduct);
   }
 
   createSlug(name: string, sex?: Gender, isAdult?: boolean) {
-    let slug = slugify(name, { lower: true });
+    let slug = slugify(name, { lower: true, locale: "vi" });
 
     if (sex === "Nam") slug += "-nam";
     if (sex === "Nữ") slug += "-nu";
@@ -44,202 +285,72 @@ class GroupProductService {
     return slug;
   }
 
-  getAll(
-    query: GroupProductQueryParams,
-    isAdmin?: boolean
-  ): Promise<ResponseData> {
+  search(params: SearchParams): Promise<GetAll<GroupProduct>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { withDeleted, name, slug, description, q, forHeader } = query;
+        const { q } = params;
+        const { wherePagination } = handlePagination(params);
+        const { sort } = handleSort(params);
+        const [items, count] = await this.getRepository().findAndCount({
+          order: sort,
+          where: [
+            handleILike("name", q),
+            handleILike("slug", q),
+            handleILike("description", q),
+          ],
+          ...wherePagination,
+        });
+        resolve({ items, count });
+      } catch (error) {
+        console.log("GroupProductService.search", error);
+      }
+      resolve(EMPTY_ITEMS);
+    });
+  }
+
+  getRelatied(
+    query: GetAllGroupProductQueryParams
+  ): Promise<GetAll<GroupProduct>> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { relatedSlug } = query;
         const { wherePagination } = handlePagination(query);
         const { sort } = handleSort(query);
-        if (forHeader) {
-          const itemsFemale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.FEMALE },
-          });
-          const itemsMale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.MALE },
-          });
-          const itemsGirl = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.FEMALE, isAdult: false },
-          });
-          const itemsBoy = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.MALE, isAdult: false },
-          });
 
-          resolve({
-            data: [
-              {
-                name: GroupProductSexEnum.FEMALE,
-                slug: slugify(GroupProductSexEnum.FEMALE, { lower: true }),
-                items: itemsFemale,
-              },
-              {
-                name: GroupProductSexEnum.MALE,
-                slug: slugify(GroupProductSexEnum.MALE, { lower: true }),
-                items: itemsMale,
-              },
-              {
-                name: "Bé gái",
-                slug: slugify("Bé gái", { lower: true }),
-                items: itemsGirl,
-              },
-              {
-                name: "Bé trai",
-                slug: slugify("Bé trai", { lower: true }),
-                items: itemsBoy,
-              },
-            ],
-          });
-        } else {
+        const item = await this.getRepository().findOneBy({
+          slug: ILike(`%${relatedSlug}%`),
+        });
+        if (item) {
           const [groupProducts, count] =
             await this.getRepository().findAndCount({
               order: sort,
               where: {
-                ...handleILike("name", name),
-                ...handleILike("slug", slug),
-                ...handleILike("description", description),
-                ...handleSearchILike(["name", "slug", "description"], q),
+                isAdult: item.isAdult,
+                sex: item.sex,
               },
-              withDeleted: isAdmin && withDeleted ? true : false,
               ...wherePagination,
             });
-          resolve({ data: { items: groupProducts, count } });
+          resolve({ items: groupProducts, count });
         }
       } catch (error) {
-        console.log("GET ALL GROUP PRODUCTS ERROR", error);
-        resolve({ error });
+        console.log("SEARCH GROUP PRODUCTS ERROR", error);
       }
+      resolve(EMPTY_ITEMS);
     });
   }
-  getById(id: number): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const groupproduct = await this.getRepository().findOneBy({
-          id,
-        });
-        resolve({ data: groupproduct });
-      } catch (error) {
-        console.log("GET GROUP PRODUCT BY ID ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  createGroupProduct(dto: CreateGroupProductDTO): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const { name, sex, isAdult } = dto;
-        const newGroupProduct = await this.getRepository().save({
-          ...dto,
-          slug: this.createSlug(name, sex, isAdult),
-        });
-        resolve({ data: newGroupProduct });
-      } catch (error) {
-        console.log("CREATE GROUP PRODUCT ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  updateGroupProduct(
-    id: number,
-    dto: CreateGroupProductDTO
-  ): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const groupProduct = await this.getRepository().findOneBy({
-          id,
-        });
-        if (groupProduct) {
-          const { name, sex, isAdult } = dto;
-          const newGroupProduct = await this.getRepository().save({
-            ...groupProduct,
-            ...dto,
-            ...(name ? { slug: this.createSlug(name, sex, isAdult) } : {}),
-          });
-          resolve({ data: newGroupProduct });
-        }
-        resolve({});
-      } catch (error) {
-        console.log("UPDATE GROUP PRODUCT ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  softDeleteGroupProduct(id: number): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().softDelete({ id });
-        resolve({});
-      } catch (error) {
-        console.log("SOFT DELETE GROUP PRODUCT ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  restoreGroupProduct(id: number): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().restore({ id });
-        resolve({});
-      } catch (error) {
-        console.log("RESTORE GROUP PRODUCT ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  deleteGroupProduct(id: number): Promise<ResponseData> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().delete({ id });
-        resolve({});
-      } catch (error) {
-        console.log("DELETE GROUP PRODUCT ERROR", error);
-        resolve({ error });
-      }
-    });
-  }
-  seed(): Promise<ResponseData> {
+
+  seed(): Promise<GetAll<GroupProduct>> {
     return new Promise(async (resolve, _) => {
       try {
         const count = await this.getRepository().count();
         if (count === 0) {
-          const groupproducts = await this.getRepository().save([
-            {
-              name: "Áo thun",
-              slug: "ao-thun-nam",
-            },
-            {
-              name: "Áo sơ mi",
-              slug: "ao-so-mi-nam",
-            },
-            {
-              name: "Áo polo",
-              slug: "ao-polo-nam",
-            },
-            {
-              name: "Áo khoác",
-              slug: "ao-khoac-nam",
-            },
-            {
-              name: "Quần tây",
-              slug: "quan-tay-nam",
-            },
-            {
-              name: "Quần short",
-              slug: "quan-short-nam",
-            },
-            {
-              name: "Quần kaki",
-              slug: "quan-kaki-nam",
-            },
-          ]);
-          resolve({ data: { items: groupproducts } });
+          const items = await this.getRepository().save(seedGroupProducts);
+          resolve({ items: items, count: items.length });
         }
-        resolve({ data: { items: [] } });
       } catch (error) {
-        console.log("CREATE SEED GROUP PRODUCTS ERROR", error);
-        resolve({ error });
+        console.log("GroupProductService.seed", error);
       }
+      resolve(EMPTY_ITEMS);
     });
   }
 }

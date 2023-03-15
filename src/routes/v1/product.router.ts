@@ -9,13 +9,18 @@ import {
 const router = Router();
 
 // router.get("/seed", productController.seed);
-router.get("/search", productController.searchProduct);
+router.get("/search", productController.search);
 router.get("/:id", productController.getById);
-router.get("/", getUser, productController.getAllProducts);
-router.post("/", requireIsAdmin, productController.createProduct);
-router.patch("/:id", requireIsAdmin, productController.updateProduct);
-router.delete("/soft/:id", requireIsAdmin, productController.softDeleteProduct);
-router.delete("/restore/:id", requireIsAdmin, productController.restoreProduct);
-router.delete("/:id", requireIsAdmin, productController.deleteProduct);
+router.get("/", getUser, productController.getAll);
+router.post("/many", requireIsAdmin, productController.createMany);
+router.post("/", requireIsAdmin, productController.createOne);
+router.patch("/many", requireIsAdmin, productController.updateMany);
+router.patch("/:id", requireIsAdmin, productController.updateOne);
+router.delete("/soft/many", requireIsAdmin, productController.softDeleteOne);
+router.delete("/restore/many", requireIsAdmin, productController.restoreOne);
+router.delete("/many", requireIsAdmin, productController.deleteOne);
+router.delete("/soft/:id", requireIsAdmin, productController.softDeleteOne);
+router.delete("/restore/:id", requireIsAdmin, productController.restoreOne);
+router.delete("/:id", requireIsAdmin, productController.deleteOne);
 
 export default router;

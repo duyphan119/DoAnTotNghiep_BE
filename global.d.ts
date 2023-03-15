@@ -1,4 +1,6 @@
 import { Server } from "socket.io";
+
 declare global {
-  var _io: Server<any>;
+  var _io: any;
+  var _redisClient: any;
 }

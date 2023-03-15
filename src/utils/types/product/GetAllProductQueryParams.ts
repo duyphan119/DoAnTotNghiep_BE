@@ -1,6 +1,6 @@
-import QueryParams from "../QueryParams";
+import SearchParams from "../SearchParams";
 
-type GetAllProductQueryParams = QueryParams &
+type GetAllProductQueryParams = SearchParams &
   Partial<{
     name: string;
     slug: string;

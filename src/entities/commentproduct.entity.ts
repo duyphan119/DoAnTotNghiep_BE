@@ -5,17 +5,15 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
-  Tree,
-  TreeChildren,
-  TreeParent,
   UpdateDateColumn,
 } from "typeorm";
 import Product from "./product.entity";
+import RepCommentProduct from "./repCommentProduct.entity";
 import User from "./user.entity";
 
 @Entity({ name: "binhluanmathang" })
-@Tree("materialized-path")
 class CommentProduct {
   @PrimaryGeneratedColumn({ name: "mabinhluan" })
   id: number;
@@ -42,12 +40,6 @@ class CommentProduct {
   @IsNumber()
   parentId: number;
 
-  @TreeParent()
-  parent: CommentProduct;
-
-  @TreeChildren()
-  children: CommentProduct[];
-
   @ManyToOne(() => User, (e) => e.commentProducts)
   @JoinColumn({ name: "matk", referencedColumnName: "id" })
   user: User;
@@ -55,6 +47,9 @@ class CommentProduct {
   @ManyToOne(() => Product, (e) => e.commentProducts)
   @JoinColumn({ name: "mahang", referencedColumnName: "id" })
   product: Product;
+
+  @OneToMany(() => RepCommentProduct, (e) => e.commentProduct)
+  repComments: RepCommentProduct[];
 
   @CreateDateColumn({ name: "ngaytao" })
   createdAt: Date;

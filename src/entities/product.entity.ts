@@ -40,7 +40,7 @@ class Product {
   @Column({ nullable: true, name: "sao", default: 0, type: "float4" })
   star: number;
 
-  @Column({ nullable: true, name: "chitiet", type: "text" })
+  @Column({ nullable: true, name: "chitiet", type: "text", select: false })
   detail: string;
 
   @Column({ default: 1, name: "manhomsanpham" })
@@ -82,5 +82,13 @@ class Product {
 
   @OneToMany(() => CommentProduct, (e) => e.product)
   commentProducts: CommentProduct[];
+
+  @Column({ nullable: true, name: "metatukhoa" })
+  @IsString()
+  metaKeywords: string;
+
+  @Column({ nullable: true, name: "metamota" })
+  @IsString()
+  metaDescription: string;
 }
 export default Product;

@@ -1,4 +1,4 @@
-import { Between, Not } from "typeorm";
+import { Between } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import CommentProduct from "../entities/commentProduct.entity";
@@ -6,25 +6,24 @@ import {
   handleEqual,
   handleILike,
   handlePagination,
-  handleRelationDepth,
   handleSearchEqual,
-  handleSearchILike,
   handleSort,
   lastDay,
 } from "../utils";
-import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import { GetAll } from "../utils/types";
 import {
   CreateCommentProductDTO,
   GetAllCommentProductQueryParams,
 } from "../utils/types/commentProduct";
 import productService from "./product.service";
+import repCommentProductService from "./repCommentProduct.service";
 
 class CommentProductService {
   getRepository() {
     return AppDataSource.getRepository(CommentProduct);
   }
 
-  checkUserCommentProduct(
+  checkUserCommentProductProduct(
     userId: number,
     productId: number
   ): Promise<CommentProduct | null> {
@@ -33,7 +32,6 @@ class CommentProductService {
         const item = await this.getRepository().findOne({
           where: { userId, productId },
           relations: {
-            ...handleRelationDepth("children", 2),
             user: true,
           },
         });
@@ -44,6 +42,7 @@ class CommentProductService {
       }
     });
   }
+
   countCommentProductByMonth(year: number, month: number): Promise<number> {
     return new Promise(async (resolve, _) => {
       try {
@@ -83,15 +82,35 @@ class CommentProductService {
   getAll(
     query: GetAllCommentProductQueryParams,
     userId?: number
-  ): Promise<GetAll<CommentProduct> & { userComment: CommentProduct | null }> {
+  ): Promise<
+    GetAll<CommentProduct> & {
+      userCommentProduct: CommentProduct | null;
+    }
+  > {
     return new Promise(async (resolve, _) => {
       try {
-        const { productId, content, star, depth } = query;
-        let userComment: CommentProduct | null = null;
+        // const LIMIT_REP = 3;
+        const {
+          productId,
+          content,
+          star,
+          product,
+          repComments,
+          sortBy,
+          sortType,
+        } = query;
+        let userCommentProduct: CommentProduct | null = null;
         const { sort } = handleSort(query);
         const { wherePagination } = handlePagination(query);
         let [items, count] = await this.getRepository().findAndCount({
-          order: sort,
+          order:
+            sortBy === "productName"
+              ? {
+                  product: {
+                    name: sortType === "desc" ? "desc" : "asc",
+                  },
+                }
+              : sort,
           ...wherePagination,
           where: {
             ...handleILike("content", content),
@@ -102,16 +121,40 @@ class CommentProductService {
           },
           relations: {
             user: true,
-            ...handleRelationDepth("children", +(depth || 0)),
+            ...(product ? { product: true } : {}),
+            ...(repComments ? { repComments: { user: true } } : {}),
+            ...(sortBy === "productName" ? { product: true } : {}),
           },
         });
+        // if (repComments) {
+        //   const listRes = await Promise.all(
+        //     items.map((item: CommentProduct) =>
+        //       repCommentProductService.getRepository().find({
+        //         where: {
+        //           commentProductId: item.id,
+        //         },
+        //         relations: {
+        //           user: true,
+        //         },
+        //         take: LIMIT_REP,
+        //       })
+        //     )
+        //   );
+        //   items = items.map((item, index) => ({
+        //     ...item,
+        //     repComments: listRes[index],
+        //   }));
+        // }
         if (userId && productId) {
-          userComment = await this.checkUserCommentProduct(userId, +productId);
+          userCommentProduct = await this.checkUserCommentProductProduct(
+            userId,
+            +productId
+          );
         }
-        resolve({ items, count, userComment });
+        resolve({ items, count, userCommentProduct });
       } catch (error) {
         console.log("GET ALL COMMENT PRODUCTS ERROR", error);
-        resolve({ ...EMPTY_ITEMS, userComment: null });
+        resolve({ ...EMPTY_ITEMS, userCommentProduct: null });
       }
     });
   }

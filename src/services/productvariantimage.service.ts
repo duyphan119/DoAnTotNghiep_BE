@@ -1,13 +1,14 @@
-import { AppDataSource } from "../data-source";
-import { handlePagination, handleSort } from "../utils";
-import { GetAll, QueryParams, ResponseData } from "../utils/types";
-import ProductVariantImage from "../entities/productVarianImage.entity";
+import { In } from "typeorm";
 import { getCloudinary } from "../configCloudinary";
+import { EMPTY_ITEMS } from "../constantList";
+import { AppDataSource } from "../data-source";
+import ProductVariantImage from "../entities/productVarianImage.entity";
+import { handlePagination, handleSort } from "../utils";
+import { GetAll } from "../utils/types";
 import {
   CreateProductVariantImageDTO,
   GetAllProductVariantImageQueryParams,
 } from "../utils/types/productVariantImage";
-import { EMPTY_ITEMS } from "../constantList";
 
 class ProductVariantImageService {
   getRepository() {
@@ -79,6 +80,32 @@ class ProductVariantImageService {
     });
   }
 
+  updateProductVariantImages(
+    images: Array<{
+      id: number;
+      variantValueId: number;
+    }>
+  ): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const promises: Array<Promise<any>> = [];
+        images.forEach((image) => {
+          promises.push(
+            this.getRepository().update(
+              { id: image.id },
+              { variantValueId: image.variantValueId }
+            )
+          );
+        });
+        await Promise.allSettled(promises);
+        resolve(true);
+      } catch (error) {
+        console.log("UPDATE PRODUCT VARIANT IMAGE ERROR", error);
+      }
+      resolve(false);
+    });
+  }
+
   deleteProductVariantImage(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
@@ -90,6 +117,31 @@ class ProductVariantImageService {
           );
           await this.getRepository().delete({ id: item.id });
         }
+        resolve(true);
+      } catch (error) {
+        console.log("DELETE PRODUCT VARIANT IMAGES ERROR", error);
+        resolve(false);
+      }
+    });
+  }
+  deleteProductVariantImages(ids: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const promises: Array<Promise<any>> = [];
+
+        const items = await this.getRepository().find({
+          where: { id: In(ids) },
+        });
+        items.forEach((item) => {
+          promises.push(
+            getCloudinary().v2.uploader.destroy(
+              "DoAnTotNghiep_BE" +
+                item.path.split("DoAnTotNghiep_BE")[1].split(".")[0]
+            )
+          );
+          promises.push(this.getRepository().delete({ id: item.id }));
+        });
+        await Promise.allSettled(promises);
         resolve(true);
       } catch (error) {
         console.log("DELETE PRODUCT VARIANT IMAGES ERROR", error);

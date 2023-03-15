@@ -1,8 +1,14 @@
-import { IsBoolean, IsEmail, IsNumber, IsString, Min } from "class-validator";
 import {
-  BaseEntity,
+  IsBoolean,
+  IsEmail,
+  IsString,
+  Length,
+  MinLength,
+} from "class-validator";
+import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -17,24 +23,39 @@ class User {
   id: number;
 
   @Column({ nullable: false, name: "hoten" })
-  @IsString()
+  @IsString({
+    message: "Full name must be string",
+  })
   fullName: string;
 
   @Column({ nullable: false, unique: true, name: "email" })
-  @IsEmail()
+  @IsEmail(
+    {},
+    {
+      message: "Email is invalid",
+    }
+  )
   email: string;
 
   @Column({ nullable: false, name: "matkhau" })
-  @IsString()
+  @MinLength(6, {
+    message: "Password must have least 6 characters",
+  })
+  @IsString({
+    message: "Password must be string",
+  })
   password: string;
 
-  @Column({ nullable: true, length: 10, name: "sdt" })
-  @IsString()
+  @Column({ nullable: false, unique: true, length: 10, name: "sdt" })
+  @Length(10, 10, {
+    message: "Phone must have 10 digits",
+  })
+  @IsString({
+    message: "Phone must be string",
+  })
   phone: string;
 
   @Column({ default: 0, name: "diem" })
-  @IsNumber()
-  @Min(0)
   point: number;
 
   @Column({ default: false, name: "quyen" })
@@ -46,6 +67,9 @@ class User {
 
   @UpdateDateColumn({ name: "ngaycapnhat" })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
 
   @OneToMany(() => Order, (e) => e.user)
   orders: Order[];

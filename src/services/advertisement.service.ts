@@ -1,8 +1,9 @@
+import { getCloudinary } from "../configCloudinary";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Advertisement from "../entities/advertisement.entity";
 import { handleEqual, handleILike, handleSort } from "../utils";
-import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import { GetAll } from "../utils/types";
 import {
   CreateAdvertisementDTO,
   GetAllAdvertisementQueryParams,
@@ -83,7 +84,14 @@ class AdvertisementService {
   delete(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
+        const item = await this.getRepository().findOneBy({ id });
         await this.getRepository().delete({ id });
+        if (item && item.path !== "") {
+          getCloudinary().v2.uploader.destroy(
+            "DoAnTotNghiep_BE" +
+              item.path.split("DoAnTotNghiep_BE")[1].split(".")[0]
+          );
+        }
         resolve(true);
       } catch (error) {
         console.log("UPDATE ADVERTISEMENT ERROR", error);

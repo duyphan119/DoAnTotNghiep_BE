@@ -4,6 +4,66 @@ import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    Blog:
+ *      type: object
+ *      properties:
+ *        id:
+ *          type: integer
+ *          example: 1
+ *        title:
+ *          type: string
+ *          example: Outgoing president of Micronesia accuses China of bribery, threats and interference
+ *        heading:
+ *          type: string
+ *          example: In his letter, Panuelo openly canvassed the country switching its diplomatic recognition from Beijing to Taipei
+ *        slug:
+ *          type: string
+ *          example: outgoing-president-of-micronesia-accuses-china-of-bribery-threats-and-interference
+ *        content:
+ *          type: string
+ *          example: <p>China is engaged in “political warfare” in the Pacific, the outgoing president of the Federated States of Micronesia has alleged in an excoriating letter, accusing Beijing officials of bribing elected officials in Micronesia, and even “direct threats against my personal safety”.</p>
+ *        thumbnail:
+ *          type: string
+ *          example: https://i.guim.co.uk/img/media/f60b4e951b0272578a08df263d6927054422d94a/212_211_3585_2151/master/3585.jpg?width=620&quality=45&dpr=2&s=none
+ *        blogCategoryId:
+ *          type: integer
+ *        userId:
+ *          type: integer
+ *        createAt:
+ *          type: date
+ *          example: 2023-01-01T09:01:02Z
+ *        updatedAt:
+ *          type: date
+ *          example: 2023-01-01T09:01:02Z
+ *        deletedAt:
+ *          type: date
+ *          example: null
+ */
+
+/**
+ * @swagger
+ * paths:
+ *  /blog:
+ *    get:
+ *      summary: Get all blogs
+ *      responses:
+ *        200:
+ *          description: GET reponse from API
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: string
+ *      parameters:
+ *        sortBy:
+ *          in: query
+ *          description: sort by field name
+ *          required: false
+ */
+
 router.get("/seed", blogController.seed);
 router.get("/:id", blogController.getById);
 router.get("/", getUser, blogController.getAll);

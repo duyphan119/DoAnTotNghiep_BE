@@ -9,6 +9,7 @@ import {
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -128,5 +129,8 @@ class Order {
   @Column({ name: "madinhdanh_giamgia", nullable: true })
   @IsNumber()
   discountId: number;
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
 }
 export default Order;

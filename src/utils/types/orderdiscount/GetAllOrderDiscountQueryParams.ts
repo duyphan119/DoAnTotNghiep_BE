@@ -1,4 +1,4 @@
-import QueryParams from "../QueryParams";
+import SearchParams from "../SearchParams";
 
 type GetAllOrderDiscountQueryParams = Partial<{
   code: string;
@@ -7,6 +7,6 @@ type GetAllOrderDiscountQueryParams = Partial<{
   minValue: string;
   value: string;
 }> &
-  QueryParams;
+  SearchParams;
 
 export default GetAllOrderDiscountQueryParams;

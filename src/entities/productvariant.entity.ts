@@ -4,6 +4,7 @@ import productVariantService from "../services/productVariant.service";
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   EntitySubscriberInterface,
   EventSubscriber,
@@ -58,6 +59,9 @@ class ProductVariant {
 
   @OneToMany(() => OrderItem, (e) => e.order)
   items: OrderItem[];
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
 }
 export default ProductVariant;
 @EventSubscriber()
@@ -76,7 +80,7 @@ export class ProductVariantSubscriber
           productId
         );
         resolve(
-          productService.updateProduct(productId, { inventory: totalInventory })
+          productService.updateOne(productId, { inventory: totalInventory })
         );
       } catch (error) {
         reject(error);
@@ -94,7 +98,7 @@ export class ProductVariantSubscriber
               productId
             );
             resolve(
-              productService.updateProduct(productId, {
+              productService.updateOne(productId, {
                 inventory: totalInventory,
               })
             );

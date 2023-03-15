@@ -6,7 +6,8 @@ type GetAllCommentProductQueryParams = QueryParams &
     content: string;
     star: string;
     user: string;
-    depth: string;
+    product: string;
+    repComments: string;
   }>;
 
 export default GetAllCommentProductQueryParams;

@@ -3,6 +3,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
@@ -40,5 +41,8 @@ class VariantValue {
   @ManyToOne(() => Variant, (e) => e.variantValues)
   @JoinColumn({ name: "mabt", referencedColumnName: "id" })
   variant: Variant;
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
 }
 export default VariantValue;

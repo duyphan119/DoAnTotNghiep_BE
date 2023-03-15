@@ -25,7 +25,7 @@ class UserAddressService {
     return new Promise(async (resolve, _) => {
       try {
         const { wherePagination } = handlePagination(query);
-        const [groupProducts, count] = await this.getRepository().findAndCount({
+        const [items, count] = await this.getRepository().findAndCount({
           where: {
             userId,
             province: Not(IsNull()),
@@ -35,7 +35,7 @@ class UserAddressService {
           },
           ...wherePagination,
         });
-        resolve({ items: groupProducts, count });
+        resolve({ items, count });
       } catch (error) {
         console.log("GET ALL USER ADDRESS BY USER ID ERROR", error);
         resolve(EMPTY_ITEMS);

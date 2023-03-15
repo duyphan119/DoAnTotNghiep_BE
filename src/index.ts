@@ -1,19 +1,20 @@
-import "reflect-metadata";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import path from "path";
-import rootRouter from "./routes";
 import http from "http";
+import path from "path";
+import "reflect-metadata";
 import { Server } from "socket.io";
+import rootRouter from "./routes";
 
+import getRedisClient from "./configRedis";
 import { __prod__ } from "./constantList";
 import { AppDataSource } from "./data-source";
 import socketService from "./services/socket.service";
 
 require("dotenv").config();
-let PORT = process.env.PORT || "8080";
+const PORT = process.env.PORT || "8080";
 
 AppDataSource.initialize()
   .then((db) => {
@@ -32,6 +33,9 @@ AppDataSource.initialize()
     });
     global._io = io;
     io.on("connection", socketService.connection);
+
+    global._redisClient = getRedisClient();
+
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(express.static(path.join(__dirname, "")));
@@ -41,7 +45,7 @@ AppDataSource.initialize()
           ? process.env.CORS_ORIGIN_PROD
           : process.env.CORS_ORIGIN_DEV,
         credentials: true,
-        methods: ["GET", "POST", "PATCH", "DELETE"],
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       })
     );
     app.use(cookieParser());

@@ -1,6 +1,6 @@
-import QueryParams from "../QueryParams";
+import SearchParams from "../SearchParams";
 
-type GetAllUserQueryParams = QueryParams &
+type GetAllUserQueryParams = SearchParams &
   Partial<{
     fullName: string;
     phone: string;

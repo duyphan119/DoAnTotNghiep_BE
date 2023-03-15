@@ -20,8 +20,8 @@ export const handlePagination = ({ limit, p }: PaginationParams) => {
     take,
     skip,
     wherePagination: {
-      ...(take !== -1 ? { take } : {}),
-      ...(skip !== -1 ? { skip } : {}),
+      ...(take > -1 ? { take } : {}),
+      ...(skip > -1 ? { skip } : {}),
     },
   };
 };

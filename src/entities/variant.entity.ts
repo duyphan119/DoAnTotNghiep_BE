@@ -3,6 +3,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -27,5 +28,8 @@ class Variant {
 
   @OneToMany(() => VariantValue, (e) => e.variant)
   variantValues: VariantValue[];
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
 }
 export default Variant;
