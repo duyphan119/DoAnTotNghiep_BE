@@ -1,15 +1,12 @@
 import { Router } from "express";
 import productController from "../../controllers/product.controller";
-import {
-  getUser,
-  requireIsAdmin,
-  requireLogin,
-} from "../../middlewares/auth.middleware";
+import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
 // router.get("/seed", productController.seed);
 router.get("/search", productController.search);
+router.get("/recommend", productController.recommend);
 router.get("/:id", productController.getById);
 router.get("/", getUser, productController.getAll);
 router.post("/many", requireIsAdmin, productController.createMany);

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import blogController from "../../controllers/blog.controller";
-import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
+import { requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -65,12 +65,18 @@ const router = Router();
  */
 
 router.get("/seed", blogController.seed);
+router.get("/search", blogController.search);
 router.get("/:id", blogController.getById);
-router.get("/", getUser, blogController.getAll);
-router.post("/", requireIsAdmin, blogController.createBlog);
-router.patch("/:id", requireIsAdmin, blogController.updateBlog);
-router.delete("/soft/:id", requireIsAdmin, blogController.softDeleteBlog);
-router.delete("/restore/:id", requireIsAdmin, blogController.restoreBlog);
-router.delete("/:id", requireIsAdmin, blogController.deleteBlog);
+router.get("/", blogController.getAll);
+router.post("/many", requireIsAdmin, blogController.createMany);
+router.post("/", requireIsAdmin, blogController.createOne);
+router.patch("/many", requireIsAdmin, blogController.updateMany);
+router.patch("/:id", requireIsAdmin, blogController.updateOne);
+router.delete("/many", requireIsAdmin, blogController.softDeleteMany);
+router.delete("/:id", requireIsAdmin, blogController.softDeleteOne);
+router.delete("/restore/many", requireIsAdmin, blogController.restoreMany);
+router.delete("/restore/:id", requireIsAdmin, blogController.restoreOne);
+router.delete("/force/many", requireIsAdmin, blogController.deleteMany);
+router.delete("/force/:id", requireIsAdmin, blogController.deleteOne);
 
 export default router;

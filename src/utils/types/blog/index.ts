@@ -1,2 +1,2 @@
-export { default as GetAllBlogQueryParams } from "./GetAllBlogQueryParams";
+export { default as BlogParams } from "./BlogParams";
 export { default as CreateBlogDTO } from "./CreateBlogDTO";

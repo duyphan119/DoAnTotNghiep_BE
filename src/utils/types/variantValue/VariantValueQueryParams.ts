@@ -1,6 +1,6 @@
-import QueryParams from "../QueryParams";
+import SearchParams from "../SearchParams";
 
-type VariantValueQueryParams = QueryParams &
+type VariantValueQueryParams = SearchParams &
   Partial<{
     variant: string;
     value: string;

@@ -2,12 +2,7 @@ import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Variant from "../entities/variant.entity";
-import {
-  handleILike,
-  handlePagination,
-  handleSearchILike,
-  handleSort,
-} from "../utils";
+import { handleILike, handlePagination, handleSort } from "../utils";
 import { ICrudService } from "../utils/interfaces";
 import { GetAll, ResponseData, SearchParams } from "../utils/types";
 import { CreateVariantDTO, VariantQueryParams } from "../utils/types/variant";

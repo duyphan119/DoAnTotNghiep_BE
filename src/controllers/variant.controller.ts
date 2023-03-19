@@ -103,4 +103,6 @@ class VariantController {
   }
 }
 
-export default new VariantController();
+const variantController = new VariantController();
+
+export default variantController;

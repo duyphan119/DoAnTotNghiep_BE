@@ -83,11 +83,11 @@ class Product {
   @OneToMany(() => CommentProduct, (e) => e.product)
   commentProducts: CommentProduct[];
 
-  @Column({ nullable: true, name: "metatukhoa" })
+  @Column({ nullable: true, name: "metatukhoa", default: "" })
   @IsString()
   metaKeywords: string;
 
-  @Column({ nullable: true, name: "metamota" })
+  @Column({ nullable: true, name: "metamota", default: "" })
   @IsString()
   metaDescription: string;
 }

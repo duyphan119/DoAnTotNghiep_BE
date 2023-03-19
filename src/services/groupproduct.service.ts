@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import { ILike, In, Not } from "typeorm";
+import { ILike, In, MoreThan, Not } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import GroupProduct, {

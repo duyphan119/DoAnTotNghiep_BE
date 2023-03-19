@@ -11,10 +11,8 @@ interface ICrudService<
   getById(id: number): Promise<Model | null>;
   createOne(dto: CreateItemDto): Promise<Model | null>;
   createMany(listDto: CreateItemDto[]): Promise<Model[]>;
-  updateOne(id: number, dto: Partial<UpdateItemDto>): Promise<Model | null>;
-  updateMany(
-    inputs: Array<{ id: number } & Partial<UpdateItemDto>>
-  ): Promise<Model[]>;
+  updateOne(id: number, dto: UpdateItemDto): Promise<Model | null>;
+  updateMany(inputs: Array<{ id: number } & UpdateItemDto>): Promise<Model[]>;
   deleteOne(id: number): Promise<boolean>;
   deleteMany(listId: number[]): Promise<boolean>;
   softDeleteOne(id: number): Promise<boolean>;

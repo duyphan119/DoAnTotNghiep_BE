@@ -1,5 +1,12 @@
 import slugify from "slugify";
-import { Between, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
+import {
+  Between,
+  In,
+  LessThanOrEqual,
+  MoreThan,
+  MoreThanOrEqual,
+  Not,
+} from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Product from "../entities/product.entity";
@@ -10,7 +17,12 @@ import {
   handleSort,
 } from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { GetAll, PaginationParams, SearchParams } from "../utils/types";
+import {
+  GetAll,
+  PaginationParams,
+  QueryParams,
+  SearchParams,
+} from "../utils/types";
 import {
   BestSellerProduct,
   CreateProductDTO,
@@ -38,6 +50,7 @@ class ProductService
     return new Promise(async (resolve, _) => {
       try {
         const { name, productVariants, images, ...others } = dto;
+        const { description, detail } = others;
         const product = await this.getRepository().save({
           ...others,
           name,
@@ -60,17 +73,10 @@ class ProductService
             images.map((item) => ({ ...item, productId: product.id }))
           )
         );
-        if (dto.thumbnail !== "") {
-          promises.push(
-            groupProductService.updateOne(dto.groupProductId, {
-              thumbnail: dto.thumbnail,
-            })
-          );
-        }
         await Promise.allSettled(promises);
         resolve(product);
       } catch (error) {
-        console.log("CREATE PRODUCT ERROR", error);
+        console.log("ProductService.createOne", error);
         resolve(null);
       }
     });
@@ -146,7 +152,7 @@ class ProductService
           resolve(newProduct);
         }
       } catch (error) {
-        console.log("UPDATE PRODUCT ERROR", error);
+        console.log("ProductService.updateOne", error);
       }
       resolve(null);
     });
@@ -159,10 +165,14 @@ class ProductService
   deleteOne(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.getRepository().delete(id);
+        const product = await this.getRepository().findOneBy({ id });
+        if (product) {
+          await productVariantService.deleteProductVariantByProduct(product.id);
+          await this.getRepository().delete({ id });
+        }
         resolve(true);
       } catch (error) {
-        console.log("VariantService.deleteOne error", error);
+        console.log("ProductService.deleteOne error", error);
         resolve(false);
       }
     });
@@ -173,7 +183,7 @@ class ProductService
         await this.getRepository().delete(listId);
         resolve(true);
       } catch (error) {
-        console.log("VariantService.deleteMany error", error);
+        console.log("ProductService.deleteMany error", error);
         resolve(false);
       }
     });
@@ -184,7 +194,7 @@ class ProductService
         await this.getRepository().softDelete(id);
         resolve(true);
       } catch (error) {
-        console.log("VariantService.softDeleteOne error", error);
+        console.log("ProductService.softDeleteOne error", error);
         resolve(false);
       }
     });
@@ -195,7 +205,7 @@ class ProductService
         await this.getRepository().softDelete(listId);
         resolve(true);
       } catch (error) {
-        console.log("VariantService.softDeleteMany error", error);
+        console.log("ProductService.softDeleteMany error", error);
         resolve(false);
       }
     });
@@ -206,7 +216,7 @@ class ProductService
         await this.getRepository().restore(id);
         resolve(true);
       } catch (error) {
-        console.log("VariantService.restoreOne error", error);
+        console.log("ProductService.restoreOne error", error);
         resolve(false);
       }
     });
@@ -217,7 +227,7 @@ class ProductService
         await this.getRepository().restore(listId);
         resolve(true);
       } catch (error) {
-        console.log("VariantService.restoreMany error", error);
+        console.log("ProductService.restoreMany error", error);
         resolve(false);
       }
     });
@@ -248,7 +258,7 @@ class ProductService
 
         resolve({ items: newProducts, count });
       } catch (error) {
-        console.log("VariantService.search error", error);
+        console.log("ProductService.search error", error);
         resolve(EMPTY_ITEMS);
       }
     });
@@ -464,43 +474,31 @@ class ProductService
     });
   }
 
-  softDeleteProduct(id: number): Promise<boolean> {
+  recommend(params: { slug?: string } & QueryParams): Promise<GetAll<Product>> {
     return new Promise(async (resolve, _) => {
       try {
-        await this.getRepository().softDelete({ id });
-        resolve(true);
-      } catch (error) {
-        console.log("SOFT DELETE PRODUCT ERROR", error);
-        resolve(false);
-      }
-    });
-  }
-
-  restoreProduct(id: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().restore({ id });
-        resolve(true);
-      } catch (error) {
-        console.log("RESTORE PRODUCT ERROR", error);
-        resolve(false);
-      }
-    });
-  }
-
-  deleteProduct(id: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const product = await this.getRepository().findOneBy({ id });
-        if (product) {
-          await productVariantService.deleteProductVariantByProduct(product.id);
-          await this.getRepository().delete({ id });
+        const { slug } = params;
+        const { sort } = handleSort(params);
+        const { wherePagination } = handlePagination(params);
+        const item = await this.getRepository().findOne({
+          where: { slug: `${slug}` },
+          relations: { groupProduct: true },
+        });
+        if (item) {
+          const [items, count] = await this.getRepository().findAndCount({
+            order: sort,
+            where: {
+              id: Not(item.id),
+              groupProductId: item.groupProductId,
+            },
+            ...wherePagination,
+          });
+          resolve({ items, count });
         }
-        resolve(true);
       } catch (error) {
-        console.log("DELETE PRODUCT ERROR", error);
-        resolve(false);
+        console.log("ProductService.recommend error", error);
       }
+      resolve(EMPTY_ITEMS);
     });
   }
 }

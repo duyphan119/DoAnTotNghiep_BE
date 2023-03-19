@@ -4,8 +4,8 @@ import {
   MSG_SUCCESS,
   STATUS_CREATED,
   STATUS_INTERVAL_ERROR,
+  STATUS_NOTFOUND,
   STATUS_OK,
-  STATUS_UNAUTH,
 } from "../constantList";
 import variantValueService from "../services/variantValue.service";
 
@@ -16,59 +16,92 @@ class VariantValueController {
   }
   async getById(req: Request, res: Response) {
     const data = await variantValueService.getById(+req.params.id);
+    if (!data) {
+      return res.status(STATUS_NOTFOUND).json({ message: MSG_ERROR });
+    }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
-  async createVariantValue(req: Request, res: Response) {
-    const data = await variantValueService.createVariantValue(req.body);
+  async createOne(req: Request, res: Response) {
+    const data = await variantValueService.createOne(req.body);
     if (!data) {
       return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   }
-  async updateVariantValue(req: Request, res: Response) {
-    const data = await variantValueService.updateVariantValue(
-      +req.params.id,
-      req.body
-    );
+  async createMany(req: Request, res: Response) {
+    const data = await variantValueService.createMany(req.body.inputs);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
+  }
+  async updateOne(req: Request, res: Response) {
+    const data = await variantValueService.updateOne(+req.params.id, req.body);
     if (!data) {
       return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
-  async deleteVariantValue(req: Request, res: Response) {
-    const result = await variantValueService.deleteVariantValue(+req.params.id);
+  async updateMany(req: Request, res: Response) {
+    const data = await variantValueService.updateMany(req.body.inputs);
+    if (!data) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+  }
+  async deleteOne(req: Request, res: Response) {
+    const result = await variantValueService.deleteOne(+req.params.id);
     if (!result) {
-      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
-  async softDeleteVariantValue(req: Request, res: Response) {
-    const result = await variantValueService.softDeleteVariantValue(
-      +req.params.id
+  async deleteMany(req: Request, res: Response) {
+    const result = await variantValueService.deleteMany(
+      JSON.parse(req.query.listId + "")
     );
     if (!result) {
-      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
-  async restoreVariantValue(req: Request, res: Response) {
-    const result = await variantValueService.restoreVariantValue(
-      +req.params.id
+  async softDeleteOne(req: Request, res: Response) {
+    const result = await variantValueService.softDeleteOne(+req.params.id);
+    if (!result) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+  }
+  async softDeleteMany(req: Request, res: Response) {
+    const result = await variantValueService.softDeleteMany(
+      JSON.parse(req.query.listId + "")
     );
     if (!result) {
-      return res.status(STATUS_UNAUTH).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+  }
+  async restoreOne(req: Request, res: Response) {
+    const result = await variantValueService.restoreOne(+req.params.id);
+    if (!result) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    }
+    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+  }
+  async restoreMany(req: Request, res: Response) {
+    const result = await variantValueService.restoreMany(
+      JSON.parse(req.query.listId + "")
+    );
+    if (!result) {
+      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
     }
     return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
   }
   async seed(req: Request, res: Response) {
-    const { error, data } = await variantValueService.seed();
-    if (error) {
-      return res.status(STATUS_INTERVAL_ERROR).json(error);
-    }
-    return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
+    const data = await variantValueService.seed();
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
   }
 }
-
 const variantValueController = new VariantValueController();
 
 export default variantValueController;

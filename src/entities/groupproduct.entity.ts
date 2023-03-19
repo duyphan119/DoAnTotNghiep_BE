@@ -55,6 +55,14 @@ class GroupProduct {
   @OneToMany(() => Product, (e) => e.groupProduct)
   products: Product[];
 
+  @Column({ nullable: true, name: "metatukhoa", default: "" })
+  @IsString()
+  metaKeywords: string;
+
+  @Column({ nullable: true, name: "metamota", default: "" })
+  @IsString()
+  metaDescription: string;
+
   @CreateDateColumn({ name: "ngaytao" })
   createdAt: Date;
 

@@ -109,6 +109,10 @@ class ProductController {
   //     }
   //     return res.status(STATUS_CREATED).json({ data, message: MSG_SUCCESS });
   //   }
+  async recommend(req: Request, res: Response) {
+    const data = await productService.recommend(req.query);
+    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+  }
 }
 
 const productController = new ProductController();

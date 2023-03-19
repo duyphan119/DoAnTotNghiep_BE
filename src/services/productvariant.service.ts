@@ -1,15 +1,12 @@
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import ProductVariant from "../entities/productVariant.entity";
-import VariantValue from "../entities/variantValue.entity";
 import { handlePagination, handleSort } from "../utils";
-import { GetAll, QueryParams, ResponseData } from "../utils/types";
+import { GetAll } from "../utils/types";
 import {
   CreateProductVariantDTO,
   GetAllProductVariantQueryParams,
 } from "../utils/types/productVariant";
-import orderService from "./order.service";
-import orderItemService from "./orderItem.service";
 
 class ProductVariantService {
   getRepository() {
