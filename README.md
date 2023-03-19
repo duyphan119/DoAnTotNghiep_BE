@@ -1,4 +1,9 @@
-Link API: https://eshop-be.onrender.com/v1
+# Link deploy: https://eshop-be.onrender.com
 
-tk ADMIN: duychomap123@gmail.com
-pass: 123456
+# Link client: https://eshop-fe-typescipt.vercel.app
+
+# Repo frontend: https://github.com/duyphan119/Eshop_FE
+
+# Tk admin: 
+  + email: duychomap123@gmail.com
+  + password: 123456
