@@ -75,7 +75,12 @@ class UserService
   createOne(dto: CreateUserDTO): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const newItem = await this.getRepository().save(dto);
+        const { password } = dto;
+        const hashedPassword = await this.hashPassword(password);
+        const newItem = await this.getRepository().save({
+          ...dto,
+          password: hashedPassword,
+        });
         resolve(newItem);
       } catch (error) {
         console.log("UserService.createOne", error);
@@ -86,7 +91,15 @@ class UserService
   createMany(listDto: CreateUserDTO[]): Promise<User[]> {
     return new Promise(async (resolve, _) => {
       try {
-        const newItems = await this.getRepository().save(listDto);
+        const listHashedPassword = await Promise.all(
+          listDto.map(({ password }) => this.hashPassword(password))
+        );
+        const newItems = await this.getRepository().save(
+          listHashedPassword.map((hashedPassword, index) => ({
+            ...listDto[index],
+            password: hashedPassword,
+          }))
+        );
         resolve(newItems);
       } catch (error) {
         console.log("UserService.createMany error", error);

@@ -26,12 +26,20 @@ export const handlePagination = ({ limit, p }: PaginationParams) => {
   };
 };
 
-export const handleSort = ({ sortBy, sortType }: SortParams) => {
+export const handleSort = ({
+  sortBy,
+  sortType,
+}: SortParams): {
+  sortBy?: string;
+  sortType: "DESC" | "ASC";
+  sort: { [key: string]: "DESC" | "ASC" };
+} => {
   return {
     sortBy,
-    sortType,
+    sortType: sortType === "ASC" || sortType === "asc" ? "ASC" : "DESC",
     sort: {
-      [sortBy || "id"]: sortType || "desc",
+      [sortBy || "id"]:
+        sortType === "ASC" || sortType === "asc" ? "ASC" : "DESC",
     },
   };
 };

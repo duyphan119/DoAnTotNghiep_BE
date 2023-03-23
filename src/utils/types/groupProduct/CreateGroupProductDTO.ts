@@ -2,7 +2,6 @@ import Gender from "../Gender";
 
 type CreateGroupProductDTO = {
   name: string;
-  slug: string;
 } & Partial<{
   sex: Gender;
   isAdult: boolean;

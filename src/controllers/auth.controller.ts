@@ -100,8 +100,9 @@ class AuthController {
   }
 
   async getProfile(req: Request, res: Response) {
-    if (!res.locals.user)
+    if (!res.locals.user) {
       return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
+    }
     const userId = +res.locals.user.id;
     const data = await userService.getById(userId);
 

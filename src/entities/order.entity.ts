@@ -31,8 +31,12 @@ export enum OrderStatusEnum {
 
 @Entity({ name: "donhang" })
 class Order {
-  @PrimaryGeneratedColumn({ name: "madonhang" })
+  @PrimaryGeneratedColumn({ name: "madinhdanh" })
   id: number;
+
+  @Column({ nullable: true, name: "madonhang" })
+  @IsString()
+  code: string;
 
   @Column({ nullable: true, name: "hoten" })
   @IsString()

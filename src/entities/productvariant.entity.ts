@@ -24,12 +24,16 @@ import VariantValue from "./variantValue.entity";
 
 @Entity({ name: "mathangbienthe" })
 class ProductVariant {
-  @PrimaryGeneratedColumn({ name: "mahangbienthe" })
+  @PrimaryGeneratedColumn({ name: "madinhdanh" })
   id: number;
 
   @Column({ nullable: true, name: "tenhangbienthe" })
   @IsString()
   name: string;
+
+  @Column({ nullable: false, name: "mamathangbienthe", unique: true })
+  @IsString()
+  code: string;
 
   @Column({ default: 0, name: "soluongton" })
   @IsNumber()
@@ -50,7 +54,7 @@ class ProductVariant {
   updatedAt: Date;
 
   @ManyToMany(() => VariantValue, (e) => e.productVariants)
-  @JoinTable({ name: "mathangbienthe_giatribienthe" })
+  @JoinTable({ name: "mathangbienthe_thuoctinhsanpham" })
   variantValues: VariantValue[];
 
   @ManyToOne(() => Product, (e) => e.productVariants)

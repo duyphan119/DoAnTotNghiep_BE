@@ -52,20 +52,20 @@ class GroupProductService
         const { sort } = handleSort(params);
         if (forHeader) {
           const itemsFemale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.FEMALE },
-            order: { name: "asc" },
+            where: { sex: GroupProductSexEnum.FEMALE, isAdult: true },
+            order: { name: "ASC" },
           });
           const itemsMale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.MALE },
-            order: { name: "asc" },
+            where: { sex: GroupProductSexEnum.MALE, isAdult: true },
+            order: { name: "ASC" },
           });
           const itemsGirl = await this.getRepository().find({
             where: { sex: GroupProductSexEnum.FEMALE, isAdult: false },
-            order: { name: "asc" },
+            order: { name: "ASC" },
           });
           const itemsBoy = await this.getRepository().find({
             where: { sex: GroupProductSexEnum.MALE, isAdult: false },
-            order: { name: "asc" },
+            order: { name: "ASC" },
           });
 
           resolve([
@@ -279,9 +279,10 @@ class GroupProductService
   createSlug(name: string, sex?: Gender, isAdult?: boolean) {
     let slug = slugify(name, { lower: true, locale: "vi" });
 
-    if (sex === "Nam") slug += "-nam";
-    if (sex === "Nữ") slug += "-nu";
-    if (isAdult === false) slug += "-tre-em";
+    if (sex === "Nam" && isAdult) slug += "-nam";
+    else if (sex === "Nữ" && isAdult) slug += "-nu";
+    else if (sex === "Nam" && !isAdult) slug += "-be-trai";
+    else if (sex === "Nữ" && !isAdult) slug += "-be-gai ";
     return slug;
   }
 

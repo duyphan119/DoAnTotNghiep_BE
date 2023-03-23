@@ -154,20 +154,28 @@ class VariantValueService
       }
     });
   }
-  search(params: VariantValueQueryParams): Promise<GetAll<VariantValue>> {
+  search(params: SearchParams): Promise<GetAll<VariantValue>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { q, variant } = params;
+        const { q } = params;
         const { wherePagination } = handlePagination(params);
-        const { sort } = handleSort(params);
+        const { sort, sortType, sortBy } = handleSort(params);
         const [items, count] = await this.getRepository().findAndCount({
-          order: sort,
+          order:
+            sortBy === "type"
+              ? {
+                  variant: {
+                    name: sortType,
+                  },
+                }
+              : sort,
           where: [
+            handleILike("code", q),
             handleILike("value", q),
-            variant ? { variant: handleILike("name", q) } : {},
+            { variant: handleILike("name", q) },
           ],
           ...wherePagination,
-          relations: { ...(variant ? { variant: true } : {}) },
+          relations: { variant: true },
         });
         resolve({ items, count });
       } catch (error) {
@@ -187,9 +195,16 @@ class VariantValueService
         else {
           const { variant, value, type } = params;
           const { wherePagination } = handlePagination(params);
-          const { sort } = handleSort(params);
+          const { sort, sortBy, sortType } = handleSort(params);
           const [items, count] = await this.getRepository().findAndCount({
-            order: sort,
+            order:
+              sortBy === "type"
+                ? {
+                    variant: {
+                      name: sortType,
+                    },
+                  }
+                : sort,
             where: {
               ...handleILike("value", value),
               ...(type ? { variant: handleILike("name", type) } : {}),

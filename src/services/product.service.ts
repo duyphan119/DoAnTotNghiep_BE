@@ -58,7 +58,7 @@ class ProductService
         });
         const promises = [];
         promises.push(
-          productVariantService.createProductVariants(
+          productVariantService.createMany(
             productVariants.map((item) => ({
               inventory: item.inventory,
               name: item.name,
@@ -109,7 +109,7 @@ class ProductService
           });
           if (newProductVariants) {
             promises.push(
-              productVariantService.createProductVariants(
+              productVariantService.createMany(
                 newProductVariants.map((item) => ({
                   inventory: item.inventory,
                   name: item.name,
@@ -167,7 +167,9 @@ class ProductService
       try {
         const product = await this.getRepository().findOneBy({ id });
         if (product) {
-          await productVariantService.deleteProductVariantByProduct(product.id);
+          await productVariantService
+            .getRepository()
+            .delete({ productId: product.id });
           await this.getRepository().delete({ id });
         }
         resolve(true);
@@ -319,7 +321,7 @@ class ProductService
             order: {
               ...(sortBy === "groupProduct"
                 ? {
-                    groupProduct: { name: sortType === "asc" ? "asc" : "desc" },
+                    groupProduct: { name: sortType === "ASC" ? "ASC" : "DESC" },
                   }
                 : sort),
               ...(images ? { images: { id: "DESC" } } : {}),
@@ -374,7 +376,7 @@ class ProductService
             if (sortBy && sortBy === "price")
               newProducts.sort(
                 (a: ProductHasMinMaxPrice, b: ProductHasMinMaxPrice) =>
-                  (a.minPrice - b.minPrice) * (sortType === "asc" ? 1 : -1)
+                  (a.minPrice - b.minPrice) * (sortType === "ASC" ? 1 : -1)
               );
             resolve({ items: newProducts, count });
           } else {

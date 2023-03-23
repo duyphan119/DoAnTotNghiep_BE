@@ -8,19 +8,24 @@ export const getUser: any = (
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies[COOKIE_REFRESH_TOKEN_NAME];
+    const refreshToken =
+      req.cookies[COOKIE_REFRESH_TOKEN_NAME] || req.body.refreshToken;
+    const accessToken = req.headers["authorization"]?.split(" ")[1];
     if (refreshToken) {
-      try {
-        const user = jwt.verify(
-          refreshToken,
-          process.env.RT_SECRET || "super-secret"
-        );
-        res.locals.user = user || null;
-      } catch (error) {
-        console.log("ERROR", error);
-      }
+      const user = jwt.verify(
+        refreshToken,
+        process.env.RT_SECRET || "super-secret"
+      );
+      res.locals.user = user || null;
+    } else if (accessToken) {
+      const user = jwt.verify(
+        accessToken,
+        process.env.AT_SECRET || "super-secret"
+      );
+      res.locals.user = user || null;
     }
   } catch (error) {
+    console.log(error);
   } finally {
     next();
   }

@@ -2,25 +2,23 @@ import { IsNumber, IsString } from "class-validator";
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-
-export enum NotifyTypeEnum {
-  Order = "Đơn hàng",
-  CommentProduct = "Đánh giá sản phẩm",
-  RepCommentProduct = "Trả lời đánh giá sản phẩm",
-}
+import NotificationType from "./notificationType.entity";
 
 @Entity({ name: "thongbao" })
-class Notify {
+class Notification {
   @PrimaryGeneratedColumn({ name: "mathongbao" })
   id: number;
 
-  @Column({ name: "tinnhan", nullable: false })
+  @Column({ name: "noidung", nullable: false })
   @IsString()
-  message: string;
+  content: string;
 
   @Column({ name: "matk", nullable: false })
   @IsNumber()
@@ -32,19 +30,21 @@ class Notify {
   @Column({ name: "matk_dadoc", nullable: true })
   readBy: number;
 
-  @Column({
-    name: "loaithongbao",
-    type: "enum",
-    enum: NotifyTypeEnum,
-    default: NotifyTypeEnum.Order,
-  })
-  type: string;
+  @Column({ name: "maloaithongbao", nullable: false })
+  notificationTypeId: number;
 
   @CreateDateColumn({ name: "ngaytao" })
   createdAt: Date;
 
   @UpdateDateColumn({ name: "ngaycapnhat" })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: "ngayxoa" })
+  deletedAt?: Date;
+
+  @ManyToOne(() => NotificationType, (e) => e.notifications)
+  @JoinColumn({ name: "maloaithongbao", referencedColumnName: "id" })
+  notificationType: NotificationType;
 }
 
-export default Notify;
+export default Notification;

@@ -1,50 +1,32 @@
 import { Router } from "express";
-import productvariantController from "../../controllers/productVariant.controller";
-import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
+import productVariantController from "../../controllers/productVariant.controller";
+import { requireIsAdmin } from "../../middlewares/auth.middleware";
 
-const productVariantRouter = Router();
+const router = Router();
 
-// productVariantRouter.get("/seed", productvariantController.seed);
-productVariantRouter.get("/:id", productvariantController.getById);
-productVariantRouter.get(
-  "/",
-  getUser,
-  productvariantController.getAllProductVariants
-);
-productVariantRouter.post(
-  "/many",
+router.get("/:id", productVariantController.getById);
+router.get("/", productVariantController.getAll);
+router.post("/many", requireIsAdmin, productVariantController.createMany);
+router.post("/", requireIsAdmin, productVariantController.createOne);
+router.patch("/many", requireIsAdmin, productVariantController.updateMany);
+router.patch("/:id", requireIsAdmin, productVariantController.updateOne);
+router.delete("/many", requireIsAdmin, productVariantController.softDeleteMany);
+router.delete("/:id", requireIsAdmin, productVariantController.softDeleteOne);
+router.delete(
+  "/restore/many",
   requireIsAdmin,
-  productvariantController.createProductVariants
+  productVariantController.restoreMany
 );
-productVariantRouter.post(
-  "/",
-  requireIsAdmin,
-  productvariantController.createProductVariant
-);
-productVariantRouter.patch(
-  "/many",
-  requireIsAdmin,
-  productvariantController.updateProductVariants
-);
-productVariantRouter.patch(
-  "/:id",
-  requireIsAdmin,
-  productvariantController.updateProductVariant
-);
-productVariantRouter.delete(
-  "/soft/:id",
-  requireIsAdmin,
-  productvariantController.softDeleteProductVariant
-);
-productVariantRouter.delete(
+router.delete(
   "/restore/:id",
   requireIsAdmin,
-  productvariantController.restoreProductVariant
+  productVariantController.restoreOne
 );
-productVariantRouter.delete(
-  "/:id",
+router.delete(
+  "/force/many",
   requireIsAdmin,
-  productvariantController.deleteProductVariant
+  productVariantController.deleteMany
 );
+router.delete("/force/:id", requireIsAdmin, productVariantController.deleteOne);
 
-export default productVariantRouter;
+export default router;

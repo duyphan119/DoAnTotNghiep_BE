@@ -11,12 +11,12 @@ import {
 } from "typeorm";
 import VariantValue from "./variantValue.entity";
 
-@Entity({ name: "bienthe" })
+@Entity({ name: "loaithuoctinhsanpham" })
 class Variant {
-  @PrimaryGeneratedColumn({ name: "mabt" })
+  @PrimaryGeneratedColumn({ name: "madinhdanh" })
   id: number;
 
-  @Column({ nullable: false, unique: true, name: "tenbt" })
+  @Column({ nullable: false, unique: true, name: "tenloaithuoctinh" })
   @IsString()
   name: string;
 

@@ -15,16 +15,20 @@ import {
 import ProductVariant from "./productVariant.entity";
 import Variant from "./variant.entity";
 
-@Entity({ name: "giatribienthe" })
+@Entity({ name: "thuoctinhsanpham" })
 class VariantValue {
-  @PrimaryGeneratedColumn({ name: "magiatribienthe" })
+  @PrimaryGeneratedColumn({ name: "madinhdanh" })
   id: number;
 
   @Column({ nullable: false, unique: true, name: "giatri" })
   @IsString()
   value: string;
 
-  @Column({ name: "mabt", default: 1 })
+  @Column({ nullable: false, unique: true, name: "mathuoctinh" })
+  @IsString()
+  code: string;
+
+  @Column({ name: "madinhdanhloaithuoctinh", default: 1 })
   @IsNumber()
   variantId: number;
 
@@ -35,11 +39,11 @@ class VariantValue {
   updatedAt: Date;
 
   @ManyToMany(() => ProductVariant, (e) => e.variantValues)
-  @JoinTable({ name: "mathangbienthe_giatribienthe" })
+  @JoinTable({ name: "mathangbienthe_thuoctinhsanpham" })
   productVariants: ProductVariant[];
 
   @ManyToOne(() => Variant, (e) => e.variantValues)
-  @JoinColumn({ name: "mabt", referencedColumnName: "id" })
+  @JoinColumn({ name: "madinhdanhloaithuoctinh", referencedColumnName: "id" })
   variant: Variant;
 
   @DeleteDateColumn({ name: "ngayxoa" })

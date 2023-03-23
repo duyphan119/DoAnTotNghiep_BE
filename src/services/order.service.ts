@@ -67,7 +67,7 @@ class OrderService {
       try {
         const items = await this.getRepository().find({
           order: {
-            updatedAt: "desc",
+            updatedAt: "DESC",
           },
           where: { isOrdered: true },
           relations: {
@@ -81,6 +81,38 @@ class OrderService {
       }
     });
   }
+  async generateCode(): Promise<string> {
+    let code = "";
+
+    const date = new Date();
+    const yyyy = date.getFullYear();
+    const MM = date.getMonth() + 1;
+    const dd = date.getDate();
+    code += `${yyyy}${MM < 10 ? "0" + MM : MM}${dd < 10 ? "0" + dd : dd}`;
+
+    const pattern = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let randomString = "";
+
+    const random = () => {
+      randomString = "";
+      for (let i = 0; i < 8; i++) {
+        const index = Math.floor(Math.random() * pattern.length);
+        randomString += pattern[index];
+      }
+    };
+
+    try {
+      do {
+        random();
+      } while (
+        await this.getRepository().findOneBy({ code: code + randomString })
+      );
+    } catch (error) {
+      random();
+    }
+
+    return code + randomString;
+  }
   getAllOrders(
     query: GetAllOrderQueryParams,
     isCart: boolean,
@@ -89,14 +121,14 @@ class OrderService {
   ): Promise<GetAll<Order>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { items, withDeleted } = query;
+        const { items: orderItems, withDeleted } = query;
         const { sort } = handleSort(query);
         const { wherePagination } = handlePagination(query);
-        let [orders, count] = await this.getRepository().findAndCount({
+        let [items, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
           relations: {
-            ...(items
+            ...(orderItems
               ? {
                   items: {
                     productVariant: {
@@ -115,7 +147,7 @@ class OrderService {
             ...(userId ? { userId } : {}),
           },
         });
-        resolve({ items: orders, count });
+        resolve({ items, count });
       } catch (error) {
         console.log("GET ALL ORDERS ERROR", error);
         resolve(EMPTY_ITEMS);
@@ -157,6 +189,7 @@ class OrderService {
             userId,
             fullName: user.fullName,
             phone: user.phone,
+            code: await this.generateCode(),
             ...(userAddress
               ? {
                   province: userAddress.province,
@@ -407,7 +440,7 @@ class OrderService {
               order.allowCannceled = false;
               const point = await this.getPoint(order.id);
 
-              await productVariantService.updateProductVariants(
+              await productVariantService.updateMany(
                 order.items.map((item: OrderItem) => ({
                   id: item.productVariantId,
                   inventory: item.productVariant.inventory - item.quantity,

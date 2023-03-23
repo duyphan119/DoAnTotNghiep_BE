@@ -107,7 +107,7 @@ class CommentProductService {
             sortBy === "productName"
               ? {
                   product: {
-                    name: sortType === "desc" ? "desc" : "asc",
+                    name: sortType === "DESC" ? "DESC" : "ASC",
                   },
                 }
               : sort,

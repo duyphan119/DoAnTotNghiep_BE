@@ -54,23 +54,17 @@ class OrderItemService {
         orderItems.forEach((orderItem: OrderItem) => {
           if (orderItem.productVariant) {
             promises.push(
-              productVariantService.updateProductVariant(
-                orderItem.productVariant.id,
-                {
-                  inventory:
-                    orderItem.productVariant.inventory - orderItem.quantity,
-                }
-              )
+              productVariantService.updateOne(orderItem.productVariant.id, {
+                inventory:
+                  orderItem.productVariant.inventory - orderItem.quantity,
+              })
             );
           } else {
             let productVariant: ProductVariant = orderItem.productVariant;
             promises.push(
-              productVariantService.updateProductVariant(
-                orderItem.productVariantId,
-                {
-                  inventory: productVariant.inventory - orderItem.quantity,
-                }
-              )
+              productVariantService.updateOne(orderItem.productVariantId, {
+                inventory: productVariant.inventory - orderItem.quantity,
+              })
             );
           }
         });
