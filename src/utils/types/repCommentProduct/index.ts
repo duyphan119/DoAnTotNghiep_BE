@@ -1,2 +1,2 @@
-export { default as GetAllRepCommentProductQueryParams } from "./GetAllRepCommentProductQueryParams";
+export { default as RepCommentProductParams } from "./RepCommentProductParams";
 export { default as CreateRepCommentProductDTO } from "./CreateRepCommentProductDTO";

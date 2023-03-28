@@ -16,11 +16,16 @@ class ProductVariantImage {
   id: number;
 
   @Column({ nullable: true, name: "duongdan" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   path: string;
 
   @Column({ name: "mahang" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   productId: number;
 
   @Column({ name: "magiatribienthe", nullable: true })

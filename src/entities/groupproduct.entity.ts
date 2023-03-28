@@ -23,15 +23,15 @@ class GroupProduct {
   id: number;
 
   @Column({ nullable: false, name: "tennhomsanpham" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   name: string;
 
   @Column({ nullable: false, name: "duongdan" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   slug: string;
 
   @Column({ nullable: true, name: "hinhanh" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   thumbnail: string;
 
   @Column({
@@ -41,7 +41,7 @@ class GroupProduct {
     enum: GroupProductSexEnum,
     default: GroupProductSexEnum.MALE,
   })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   sex: string;
 
   @Column({ name: "nguoilon", default: true })
@@ -49,18 +49,18 @@ class GroupProduct {
   isAdult: boolean;
 
   @Column({ nullable: true, name: "mota" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   description: string;
 
   @OneToMany(() => Product, (e) => e.groupProduct)
   products: Product[];
 
   @Column({ nullable: true, name: "metatukhoa", default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   metaKeywords: string;
 
   @Column({ nullable: true, name: "metamota", default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   metaDescription: string;
 
   @CreateDateColumn({ name: "ngaytao" })

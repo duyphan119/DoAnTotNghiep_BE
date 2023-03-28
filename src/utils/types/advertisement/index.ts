@@ -1,2 +1,2 @@
-export { default as GetAllAdvertisementQueryParams } from "./GetAllAdvertisementQueryParams";
+export { default as AdvertisementParams } from "./AdvertisementParams";
 export { default as CreateAdvertisementDTO } from "./CreateAdvertisementDTO";

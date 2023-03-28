@@ -18,31 +18,41 @@ class Blog {
   id: number;
 
   @Column({ name: "modaubaiviet", nullable: true })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   heading: string;
 
   @Column({ name: "tieude", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   title: string;
 
   @Column({ name: "bidanh", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   slug: string;
 
   @Column({ name: "noidung", nullable: false, type: "text" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   content: string;
 
   @Column({ name: "matk", nullable: false })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ name: "anhdaidien", nullable: true })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   thumbnail?: string;
 
   @Column({ name: "madanhmucbaiviet", nullable: true })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   blogCategoryId: number;
 
   @CreateDateColumn({ name: "ngaytao" })
@@ -57,6 +67,14 @@ class Blog {
   @ManyToOne(() => BlogCategory, (e) => e.blogs)
   @JoinColumn({ name: "madanhmucbaiviet", referencedColumnName: "id" })
   blogCategory: BlogCategory;
+
+  @Column({ nullable: true, name: "metatukhoa", default: "" })
+  @IsString({ message: "This field must be string" })
+  metaKeywords: string;
+
+  @Column({ nullable: true, name: "metamota", default: "" })
+  @IsString({ message: "This field must be string" })
+  metaDescription: string;
 }
 
 /**

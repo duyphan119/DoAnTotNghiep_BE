@@ -1,120 +1,108 @@
 import slugify from "slugify";
-import { ILike, In, MoreThan, Not } from "typeorm";
+import { ILike, Not } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import GroupProduct, {
   GroupProductSexEnum,
 } from "../entities/groupProduct.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
+import seedGroupProducts from "../seeds/group-product";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { Gender, GetAll, SearchParams } from "../utils/types";
 import {
   CreateGroupProductDTO,
-  GetAllGroupProductQueryParams,
-} from "../utils/types/groupProduct";
-import seedGroupProducts from "../seeds/group-product";
+  Gender,
+  GetAll,
+  GroupProductParams,
+} from "../utils/types";
 
 class GroupProductService
   implements
-    ICrudService<
-      | GetAll<GroupProduct>
-      | {
-          name: string;
-          slug: string;
-          items: GroupProduct[];
-        }[],
-      GroupProduct,
-      GetAllGroupProductQueryParams,
-      CreateGroupProductDTO,
-      Partial<CreateGroupProductDTO>
-    >
+    ICrudService<GroupProduct, GroupProductParams, CreateGroupProductDTO>
 {
-  getAll(params: GetAllGroupProductQueryParams): Promise<
-    | GetAll<GroupProduct>
-    | {
-        name: string;
-        slug: string;
-        items: GroupProduct[];
-      }[]
+  getForHeaderClient(): Promise<
+    {
+      name: string;
+      slug: string;
+      items: GroupProduct[];
+    }[]
   > {
     return new Promise(async (resolve, _) => {
       try {
-        const {
-          name,
-          slug,
-          description,
-          q,
-          forHeader,
-          relatedSlug,
-          requireThumbnail,
-        } = params;
-        const { wherePagination } = handlePagination(params);
-        const { sort } = handleSort(params);
-        if (forHeader) {
-          const itemsFemale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.FEMALE, isAdult: true },
-            order: { name: "ASC" },
-          });
-          const itemsMale = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.MALE, isAdult: true },
-            order: { name: "ASC" },
-          });
-          const itemsGirl = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.FEMALE, isAdult: false },
-            order: { name: "ASC" },
-          });
-          const itemsBoy = await this.getRepository().find({
-            where: { sex: GroupProductSexEnum.MALE, isAdult: false },
-            order: { name: "ASC" },
-          });
+        const itemsFemale = await this.getRepository().find({
+          where: { sex: GroupProductSexEnum.FEMALE, isAdult: true },
+          order: { name: "ASC" },
+        });
+        const itemsMale = await this.getRepository().find({
+          where: { sex: GroupProductSexEnum.MALE, isAdult: true },
+          order: { name: "ASC" },
+        });
+        const itemsGirl = await this.getRepository().find({
+          where: { sex: GroupProductSexEnum.FEMALE, isAdult: false },
+          order: { name: "ASC" },
+        });
+        const itemsBoy = await this.getRepository().find({
+          where: { sex: GroupProductSexEnum.MALE, isAdult: false },
+          order: { name: "ASC" },
+        });
 
-          resolve([
-            {
-              name: GroupProductSexEnum.FEMALE,
-              slug: slugify(GroupProductSexEnum.FEMALE, {
-                lower: true,
-                locale: "vi",
-              }),
-              items: itemsFemale,
-            },
-            {
-              name: GroupProductSexEnum.MALE,
-              slug: slugify(GroupProductSexEnum.MALE, {
-                lower: true,
-                locale: "vi",
-              }),
-              items: itemsMale,
-            },
-            {
-              name: "Bé gái",
-              slug: slugify("Bé gái", { lower: true, locale: "vi" }),
-              items: itemsGirl,
-            },
-            {
-              name: "Bé trai",
-              slug: slugify("Bé trai", { lower: true, locale: "vi" }),
-              items: itemsBoy,
-            },
-          ]);
+        resolve([
+          {
+            name: GroupProductSexEnum.FEMALE,
+            slug: slugify(GroupProductSexEnum.FEMALE, {
+              lower: true,
+              locale: "vi",
+            }),
+            items: itemsFemale,
+          },
+          {
+            name: GroupProductSexEnum.MALE,
+            slug: slugify(GroupProductSexEnum.MALE, {
+              lower: true,
+              locale: "vi",
+            }),
+            items: itemsMale,
+          },
+          {
+            name: "Bé gái",
+            slug: slugify("Bé gái", { lower: true, locale: "vi" }),
+            items: itemsGirl,
+          },
+          {
+            name: "Bé trai",
+            slug: slugify("Bé trai", { lower: true, locale: "vi" }),
+            items: itemsBoy,
+          },
+        ]);
+      } catch (error) {
+        console.log("GroupProductServer.getForHeaderClient error", error);
+        resolve([]);
+      }
+    });
+  }
+  getAll(params: GroupProductParams): Promise<GetAll<GroupProduct>> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const { name, slug, description, q, relatedSlug, requireThumbnail } =
+          params;
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        if (q) {
+          resolve(await this.search(params));
+        } else if (relatedSlug) {
+          resolve(await this.getRelatied(params));
         } else {
-          if (q) {
-            resolve(await this.search(params));
-          } else if (relatedSlug) {
-            resolve(await this.getRelatied(params));
-          } else {
-            const [groupProducts, count] =
-              await this.getRepository().findAndCount({
-                order: sort,
-                where: {
-                  ...handleILike("name", name),
-                  ...handleILike("slug", slug),
-                  ...handleILike("description", description),
-                  ...(requireThumbnail ? { thumbnail: Not("") } : {}),
-                },
-                ...wherePagination,
-              });
-            resolve({ items: groupProducts, count });
-          }
+          const [groupProducts, count] =
+            await this.getRepository().findAndCount({
+              order: sort,
+              where: {
+                ...helper.handleILike("name", name),
+                ...helper.handleILike("slug", slug),
+                ...helper.handleILike("description", description),
+                ...(requireThumbnail ? { thumbnail: Not("") } : {}),
+              },
+              ...wherePagination,
+            });
+          resolve({ items: groupProducts, count });
         }
       } catch (error) {
         console.log("GroupProductService.getAll error", error);
@@ -135,7 +123,7 @@ class GroupProductService
     });
   }
   createOne(dto: CreateGroupProductDTO): Promise<GroupProduct | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const newItem = await this.getRepository().save({
           ...dto,
@@ -148,43 +136,44 @@ class GroupProductService
       }
     });
   }
-  createMany(listDto: CreateGroupProductDTO[]): Promise<GroupProduct[]> {
-    return new Promise(async (resolve, _) => {
+  createMany(
+    listDto: CreateGroupProductDTO[]
+  ): Promise<(GroupProduct | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const newItems = await this.getRepository().save(
-          listDto.map((dto) => ({
-            ...dto,
-            slug: this.createSlug(dto.name, dto.sex, dto.isAdult),
-          }))
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
         );
         resolve(newItems);
       } catch (error) {
         console.log("GroupProductService.createMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   updateOne(
     id: number,
     dto: Partial<CreateGroupProductDTO>
   ): Promise<GroupProduct | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         let existingItem = await this.getRepository().findOneBy({ id });
-        if (existingItem && dto.name !== existingItem.name) {
-          existingItem = { ...existingItem, ...dto };
-          resolve(
-            await this.getRepository().save({
-              ...existingItem,
-              slug: this.createSlug(
-                existingItem.name,
-                existingItem.sex as Gender,
-                existingItem.isAdult
-              ),
-            })
-          );
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...dto,
+            ...(dto.name && dto.name !== existingItem.name
+              ? {
+                  slug: this.createSlug(
+                    dto.name,
+                    dto.sex as Gender,
+                    dto.isAdult
+                  ),
+                }
+              : {}),
+          });
+          resolve(newItem);
         }
-        resolve(null);
       } catch (error) {
         console.log("GroupProductService.updateOne error", error);
       }
@@ -193,17 +182,17 @@ class GroupProductService
   }
   updateMany(
     inputs: ({ id: number } & Partial<CreateGroupProductDTO>)[]
-  ): Promise<GroupProduct[]> {
-    return new Promise(async (resolve, _) => {
+  ): Promise<(GroupProduct | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const results = await Promise.all(
+        const newItems = await Promise.all(
           inputs.map(({ id, ...dto }) => this.updateOne(id, dto))
         );
-        resolve(results.filter((result) => result) as GroupProduct[]);
+        resolve(newItems);
       } catch (error) {
         console.log("GroupProductService.updateMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   deleteOne(id: number): Promise<boolean> {
@@ -286,18 +275,18 @@ class GroupProductService
     return slug;
   }
 
-  search(params: SearchParams): Promise<GetAll<GroupProduct>> {
+  search(params: GroupProductParams): Promise<GetAll<GroupProduct>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { wherePagination } = handlePagination(params);
-        const { sort } = handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort } = helper.handleSort(params);
         const [items, count] = await this.getRepository().findAndCount({
           order: sort,
           where: [
-            handleILike("name", q),
-            handleILike("slug", q),
-            handleILike("description", q),
+            helper.handleILike("name", q),
+            helper.handleILike("slug", q),
+            helper.handleILike("description", q),
           ],
           ...wherePagination,
         });
@@ -309,32 +298,29 @@ class GroupProductService
     });
   }
 
-  getRelatied(
-    query: GetAllGroupProductQueryParams
-  ): Promise<GetAll<GroupProduct>> {
+  getRelatied(query: GroupProductParams): Promise<GetAll<GroupProduct>> {
     return new Promise(async (resolve, _) => {
       try {
         const { relatedSlug } = query;
-        const { wherePagination } = handlePagination(query);
-        const { sort } = handleSort(query);
+        const { wherePagination } = helper.handlePagination(query);
+        const { sort } = helper.handleSort(query);
 
         const item = await this.getRepository().findOneBy({
           slug: ILike(`%${relatedSlug}%`),
         });
         if (item) {
-          const [groupProducts, count] =
-            await this.getRepository().findAndCount({
-              order: sort,
-              where: {
-                isAdult: item.isAdult,
-                sex: item.sex,
-              },
-              ...wherePagination,
-            });
-          resolve({ items: groupProducts, count });
+          const [items, count] = await this.getRepository().findAndCount({
+            order: sort,
+            where: {
+              isAdult: item.isAdult,
+              sex: item.sex,
+            },
+            ...wherePagination,
+          });
+          resolve({ items, count });
         }
       } catch (error) {
-        console.log("SEARCH GROUP PRODUCTS ERROR", error);
+        console.log("GroupProductService.getRelatied error", error);
       }
       resolve(EMPTY_ITEMS);
     });
@@ -349,7 +335,7 @@ class GroupProductService
           resolve({ items: items, count: items.length });
         }
       } catch (error) {
-        console.log("GroupProductService.seed", error);
+        console.log("GroupProductService.seed error", error);
       }
       resolve(EMPTY_ITEMS);
     });

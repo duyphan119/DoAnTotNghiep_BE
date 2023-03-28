@@ -1,4 +1,4 @@
-import Statistics from "../utils/types/statistics";
+import { Statistics } from "../utils/types";
 import commentProductService from "./commentProduct.service";
 import orderService from "./order.service";
 import productService from "./product.service";

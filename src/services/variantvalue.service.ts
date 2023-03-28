@@ -1,40 +1,34 @@
-import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import VariantValue from "../entities/variantValue.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
 import { GetAll, ResponseData, SearchParams } from "../utils/types";
-import {
-  CreateVariantValueDTO,
-  VariantValueQueryParams,
-} from "../utils/types/variantValue";
+import { CreateVariantValueDTO, VariantValueParams } from "../utils/types";
 
 class VariantValueService
   implements
-    ICrudService<
-      GetAll<VariantValue>,
-      VariantValue,
-      VariantValueQueryParams,
-      CreateVariantValueDTO,
-      Partial<CreateVariantValueDTO>
-    >
+    ICrudService<VariantValue, VariantValueParams, CreateVariantValueDTO>
 {
   createOne(dto: CreateVariantValueDTO): Promise<VariantValue | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const newItem = await this.getRepository().save(dto);
         resolve(newItem);
       } catch (error) {
         console.log("VariantValueService.createOne", error);
-        resolve(null);
       }
+      resolve(null);
     });
   }
-  createMany(listDto: CreateVariantValueDTO[]): Promise<VariantValue[]> {
+  createMany(
+    listDto: CreateVariantValueDTO[]
+  ): Promise<(VariantValue | null)[]> {
     return new Promise(async (resolve, _) => {
       try {
-        const newItems = await this.getRepository().save(listDto);
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
+        );
         resolve(newItems);
       } catch (error) {
         console.log("VariantValueService.createMany error", error);
@@ -46,42 +40,35 @@ class VariantValueService
     id: number,
     dto: Partial<CreateVariantValueDTO>
   ): Promise<VariantValue | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        await this.getRepository().update({ id }, dto);
         const existingItem = await this.getRepository().findOneBy({ id });
-        resolve(existingItem);
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...dto,
+          });
+          resolve(newItem);
+        }
       } catch (error) {
         console.log("VariantValueService.updateOne error", error);
       }
-      resolve(null);
     });
   }
   updateMany(
     inputs: ({ id: number } & Partial<CreateVariantValueDTO>)[]
-  ): Promise<VariantValue[]> {
+  ): Promise<(VariantValue | null)[]> {
     return new Promise(async (resolve, _) => {
       try {
-        await Promise.all(
+        const items = await Promise.all(
           inputs.map(
             (input: { id: number } & Partial<CreateVariantValueDTO>) => {
               const { id, ...dto } = input;
-              return this.getRepository().update({ id }, dto);
+              return this.updateOne(id, dto);
             }
           )
         );
-        resolve(
-          await this.getRepository().find({
-            where: {
-              id: In(
-                inputs.map(
-                  (input: { id: number } & Partial<CreateVariantValueDTO>) =>
-                    input.id
-                )
-              ),
-            },
-          })
-        );
+        resolve(items);
       } catch (error) {
         console.log("VariantValueService.updateMany error", error);
         resolve([]);
@@ -154,12 +141,12 @@ class VariantValueService
       }
     });
   }
-  search(params: SearchParams): Promise<GetAll<VariantValue>> {
+  search(params: VariantValueParams): Promise<GetAll<VariantValue>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { q } = params;
-        const { wherePagination } = handlePagination(params);
-        const { sort, sortType, sortBy } = handleSort(params);
+        const { q, variant } = params;
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort, sortType, sortBy } = helper.handleSort(params);
         const [items, count] = await this.getRepository().findAndCount({
           order:
             sortBy === "type"
@@ -170,12 +157,12 @@ class VariantValueService
                 }
               : sort,
           where: [
-            handleILike("code", q),
-            handleILike("value", q),
-            { variant: handleILike("name", q) },
+            helper.handleILike("code", q),
+            helper.handleILike("value", q),
+            variant ? { variant: helper.handleILike("name", q) } : {},
           ],
           ...wherePagination,
-          relations: { variant: true },
+          relations: { ...(variant ? { variant: true } : {}) },
         });
         resolve({ items, count });
       } catch (error) {
@@ -187,15 +174,15 @@ class VariantValueService
   getRepository() {
     return AppDataSource.getRepository(VariantValue);
   }
-  getAll(params: VariantValueQueryParams): Promise<GetAll<VariantValue>> {
+  getAll(params: VariantValueParams): Promise<GetAll<VariantValue>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
         if (q) resolve(await this.search(params));
         else {
           const { variant, value, type } = params;
-          const { wherePagination } = handlePagination(params);
-          const { sort, sortBy, sortType } = handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
+          const { sort, sortBy, sortType } = helper.handleSort(params);
           const [items, count] = await this.getRepository().findAndCount({
             order:
               sortBy === "type"
@@ -206,8 +193,8 @@ class VariantValueService
                   }
                 : sort,
             where: {
-              ...handleILike("value", value),
-              ...(type ? { variant: handleILike("name", type) } : {}),
+              ...helper.handleILike("value", value),
+              ...(type ? { variant: helper.handleILike("name", type) } : {}),
             },
             ...wherePagination,
             relations: { ...(variant ? { variant: true } : {}) },

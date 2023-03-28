@@ -5,25 +5,23 @@ import {
   STATUS_INTERVAL_ERROR,
   STATUS_OK,
 } from "../constantList";
-import OrderItem from "../entities/orderItem.entity";
 import orderService from "../services/order.service";
 import orderItemService from "../services/orderItem.service";
+import helper from "../utils";
 
 class CartController {
   async loginCreateCart(req: Request, res: Response) {
     const { cart } = req.body;
     const userId = +res.locals.user.id;
 
-    const { id } = cart;
-    const { items } = cart;
-
+    let { items: newItems } = cart;
     const data = await orderService.getAllOrders(
       req.query,
       true,
       false,
       +res.locals.user.id
     );
-
+    //kiểm tra cart của user
     let userCart = data.items.length > 0 ? data.items[0] : null;
     if (!userCart) {
       userCart = await orderService.createCart(userId);
@@ -36,37 +34,73 @@ class CartController {
 
       const updateItems: Array<Promise<any>> = [];
       const createItems: Array<Promise<any>> = [];
+      const id = userCart.id;
 
-      cartItems.forEach((cartItem) => {
-        const index = items.findIndex(
-          (item: any) => item.productVariantId === cartItem.productVariantId
+      newItems.forEach((newItem: any) => {
+        // Check xem newItem có trong giỏ hàng chưa ?
+
+        const index = cartItems.findIndex(
+          (cartItem: any) =>
+            newItem.productVariantId === cartItem.productVariantId
         );
-        if (index !== -1) {
-          if (cartItem.quantity !== items[index].quantity) {
-            updateItems.push(
-              orderItemService.updateOrderItem(
-                cartItem.id,
-                items[index].quantity
-              )
-            );
-            items.splice(index, 1);
-          }
-        }
-      });
 
-      if (items.length > 0) {
-        const id = userCart.id;
-        items.forEach((item: any) => {
+        // Nếu có trong giỏ hàng
+        if (index !== -1) {
+          console.log("Có trong giỏ hàng");
+          // if (newItem.quantity !== cartItems[index].quantity) {
+          updateItems.push(
+            orderItemService.updateOrderItem(
+              cartItems[index].id,
+              newItem.quantity + cartItems[index].quantity
+            )
+          );
+          // }
+        }
+        // Nếu không có trong giỏ hàng
+        else {
+          console.log("Không có trong giỏ hàng");
           createItems.push(
             orderItemService.createOrderItem({
               orderId: id,
-              quantity: item.quantity,
-              productVariantId: item.productVariantId,
-              price: item.price,
+              quantity: newItem.quantity,
+              productVariantId: newItem.productVariantId,
+              price: newItem.price,
             })
           );
-        });
-      }
+        }
+      });
+
+      // cartItems.forEach((cartItem) => {
+      //   const index = newItems.findIndex(
+      //     (newItem: any) =>
+      //       newItem.productVariantId === cartItem.productVariantId
+      //   );
+      //   //nếu item mới đã có trong giỏ hàng thì cập nhật số lượng
+      //   if (index !== -1) {
+      //     if (cartItem.quantity !== newItems[index].quantity) {
+      //       updateItems.push(
+      //         orderItemService.updateOrderItem(
+      //           cartItem.id,
+      //           newItems[index].quantity
+      //         )
+      //       );
+      //     }
+      //   }
+      // });
+
+      // if (newItems.length > 0) {
+      //   const id = userCart.id;
+      //   newItems.forEach((item: any) => {
+      //     createItems.push(
+      //       orderItemService.createOrderItem({
+      //         orderId: id,
+      //         quantity: item.quantity,
+      //         productVariantId: item.productVariantId,
+      //         price: item.price,
+      //       })
+      //     );
+      //   });
+      // }
 
       await Promise.all([...createItems, ...updateItems]);
     }
@@ -129,24 +163,31 @@ class CartController {
       }
     }
 
-    return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
   }
   async updateCartItem(req: Request, res: Response) {
+    if (req.body.newQuantity < 1) {
+      const result = await orderItemService.deleteOrderItem(+req.params.id);
+      if (!result) {
+        return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
+      }
+      return res.status(STATUS_OK).json(helper.responseSuccess());
+    }
     const data = await orderItemService.updateOrderItem(
       +req.params.id,
       req.body.newQuantity
     );
     if (!data) {
-      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
     }
-    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess(data));
   }
   async deleteCartItem(req: Request, res: Response) {
     const result = await orderItemService.deleteOrderItem(+req.params.id);
     if (!result) {
-      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
     }
-    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess());
   }
 }
 

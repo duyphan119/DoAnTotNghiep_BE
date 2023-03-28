@@ -19,26 +19,41 @@ class CommentProduct {
   id: number;
 
   @Column({ name: "matk", nullable: false })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ name: "sao", default: 5, nullable: true })
-  @IsNumber()
-  @Min(1)
-  @Max(5)
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
+  @Min(1, {
+    message: "This field must be greater than or equal 1",
+  })
+  @Max(5, {
+    message: "This field must be less than or equal 5",
+  })
   star: number;
 
   @Column({ name: "noidung", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   content: string;
 
   @Column({ name: "mahang", nullable: false })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   productId: number;
-
-  @Column({ name: "mabinhluan_traloi", nullable: true })
-  @IsNumber()
-  parentId: number;
 
   @ManyToOne(() => User, (e) => e.commentProducts)
   @JoinColumn({ name: "matk", referencedColumnName: "id" })

@@ -15,11 +15,21 @@ class FavoriteProduct {
   id: number;
 
   @Column({ nullable: false, name: "matk" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ nullable: false, name: "mahang" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   productId: number;
 
   @ManyToOne(() => Product, (e) => e.favorites)

@@ -1,11 +1,11 @@
-import { Between, IsNull, Not } from "typeorm";
+import { Between, Not } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Order, { OrderStatusEnum } from "../entities/order.entity";
 import OrderItem from "../entities/orderItem.entity";
-import { handlePagination, handleSort, lastDay } from "../utils";
-import { GetAll, QueryParams, ResponseData } from "../utils/types";
-import { CreateOrderDTO, GetAllOrderQueryParams } from "../utils/types/order";
+import helper from "../utils";
+import { GetAll } from "../utils/types";
+import { CreateOrderDTO, OrderParams } from "../utils/types";
 import orderItemService from "./orderItem.service";
 import productVariantService from "./productVariant.service";
 import userService from "./user.service";
@@ -114,16 +114,16 @@ class OrderService {
     return code + randomString;
   }
   getAllOrders(
-    query: GetAllOrderQueryParams,
+    query: OrderParams,
     isCart: boolean,
     isAdmin: boolean,
     userId?: number
   ): Promise<GetAll<Order>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { items: orderItems, withDeleted } = query;
-        const { sort } = handleSort(query);
-        const { wherePagination } = handlePagination(query);
+        const { items: orderItems, discount } = query;
+        const { sort } = helper.handleSort(query);
+        const { wherePagination } = helper.handlePagination(query);
         let [items, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
@@ -138,8 +138,8 @@ class OrderService {
                   },
                 }
               : {}),
+            ...(discount ? { discount: true } : {}),
           },
-          withDeleted: isAdmin && withDeleted ? true : false,
           where: {
             status: isCart
               ? OrderStatusEnum.INCART
@@ -207,6 +207,22 @@ class OrderService {
       }
     });
   }
+  cancel(userId: number, orderId: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete({
+          userId,
+          id: orderId,
+        });
+
+        resolve(true);
+      } catch (error) {
+        console.log("OrderService.cancel", error);
+      }
+
+      resolve(false);
+    });
+  }
   getUserPoint(userId: number): Promise<number> {
     return new Promise(async (resolve, _) => {
       try {
@@ -252,19 +268,21 @@ class OrderService {
 
           const { userId } = order;
           const { province, district, ward, address } = dto;
-          const userAddress = await userAddressService.getByDTO(userId, {
+          const userAddress = await userAddressService.getByDTO({
             province,
             district,
             ward,
             address,
+            userId,
           });
 
           if (!userAddress) {
-            await userAddressService.createUserAddress(userId, {
+            await userAddressService.createOne({
               province,
               district,
               ward,
               address,
+              userId,
             });
           }
 
@@ -283,7 +301,7 @@ class OrderService {
           where: {
             createdAt: Between(
               new Date(`${year}-${month}-01`),
-              new Date(`${year}-${month}-${lastDay(month, year)}`)
+              new Date(`${year}-${month}-${helper.lastDay(month, year)}`)
             ),
             status: OrderStatusEnum.DELIVERED,
           },
@@ -321,15 +339,13 @@ class OrderService {
         let month = date.getMonth() + 1;
         let year = date.getFullYear();
 
-        let data = await orderItemService
-          .getRepository()
-          .createQueryBuilder("ctdh")
-          .leftJoinAndSelect("ctdh.order", "dh")
+        let data = await this.getRepository()
+          .createQueryBuilder("dh")
           .groupBy(`date_part('day', dh.ngaycapnhat)`)
           .addGroupBy(`date_part('month', dh.ngaycapnhat)`)
           .addGroupBy(`date_part('year', dh.ngaycapnhat)`)
           .addGroupBy(`date_part('hour',dh.ngaycapnhat)`)
-          .select("sum(ctdh.giaban)", "total")
+          .select("sum(dh.tongtien)", "total")
           .addSelect(`date_part('day', dh.ngaycapnhat)`, "day")
           .addSelect(`date_part('month', dh.ngaycapnhat)`, "month")
           .addSelect(`date_part('year', dh.ngaycapnhat)`, "year")
@@ -350,25 +366,25 @@ class OrderService {
   listRevenueByMonth(year: number, month: number): Promise<any> {
     return new Promise(async (resolve, _) => {
       try {
-        const data = await orderItemService
-          .getRepository()
-          .createQueryBuilder("ctdh")
-          .leftJoinAndSelect("ctdh.order", "dh")
+        const data = await this.getRepository()
+          .createQueryBuilder("dh")
           .groupBy(`date_part('day', dh.ngaydat)`)
           .addGroupBy(`date_part('month', dh.ngaydat)`)
           .addGroupBy(`date_part('year', dh.ngaydat)`)
-          .select("sum(ctdh.giaban)", "total")
+          .addGroupBy(`date_part('year', dh.ngaydat)`)
+          .select("sum(dh.tongtien)", "total")
           .addSelect(`date_part('day', dh.ngaydat)`, "day")
           .addSelect(`date_part('month', dh.ngaydat)`, "month")
           .addSelect(`date_part('year', dh.ngaydat)`, "year")
           .where("dh.ngaydat between :startDate and :endDate", {
             startDate: new Date(`${year}-${month}-01`),
-            endDate: new Date(`${year}-${month}-${lastDay(month, year)}`),
+            endDate: new Date(
+              `${year}-${month}-${helper.lastDay(month, year)}`
+            ),
           })
           .andWhere("dh.dathanhtoan = :isPaid", { isPaid: true })
           .orderBy("date_part('day', dh.ngaydat)", "ASC")
           .getRawMany();
-
         resolve(data);
       } catch (error) {
         console.log("LIST REVENUE BY MONTH ERROR", error);
@@ -379,13 +395,11 @@ class OrderService {
   listRevenueByYear(year: number): Promise<any> {
     return new Promise(async (resolve, _) => {
       try {
-        const data = await orderItemService
-          .getRepository()
-          .createQueryBuilder("ctdh")
-          .leftJoinAndSelect("ctdh.order", "dh")
+        const data = await this.getRepository()
+          .createQueryBuilder("dh")
           .groupBy(`date_part('month', dh.ngaydat)`)
           .addGroupBy(`date_part('year', dh.ngaydat)`)
-          .select("sum(ctdh.giaban)", "total")
+          .select("sum(dh.tongtien)", "total")
           .addSelect(`date_part('month', dh.ngaydat)`, "month")
           .addSelect(`date_part('year', dh.ngaydat)`, "year")
           .where("date_part('year', dh.ngaydat) = :year", { year })
@@ -402,18 +416,19 @@ class OrderService {
   revenueByMonth(year: number, month: number): Promise<number> {
     return new Promise(async (resolve, _) => {
       try {
-        const data = await orderItemService
-          .getRepository()
-          .createQueryBuilder("ctdh")
-          .leftJoin("ctdh.order", "dh")
-          .select("sum(ctdh.giaban)", "total")
+        const data = await this.getRepository()
+          .createQueryBuilder("dh")
+          .select("sum(dh.tongtien)", "total")
           .where("dh.ngaydat between :startDate and :endDate", {
             startDate: new Date(`${year}-${month}-01`),
-            endDate: new Date(`${year}-${month}-${lastDay(month, year)}`),
+            endDate: new Date(
+              `${year}-${month}-${helper.lastDay(month, year)}`
+            ),
           })
           .andWhere("dh.dathanhtoan = :isPaid", { isPaid: true })
           .getRawOne();
         if (data && data.total) resolve(+data.total);
+
         resolve(0);
       } catch (error) {
         resolve(0);
@@ -424,7 +439,7 @@ class OrderService {
     return new Promise(async (resolve, _) => {
       try {
         let order = await this.getOrderById(id);
-        console.log("order:::", order);
+
         if (order) {
           const { allowCannceled, isPaid, isOrdered } = order;
           if (isOrdered) {

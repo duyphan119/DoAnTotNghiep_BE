@@ -1,6 +1,6 @@
 import SearchParams from "../SearchParams";
 
-type GetAllOrderDiscountQueryParams = Partial<{
+type OrderDiscountParams = Partial<{
   code: string;
   start: string;
   end: string;
@@ -9,4 +9,4 @@ type GetAllOrderDiscountQueryParams = Partial<{
 }> &
   SearchParams;
 
-export default GetAllOrderDiscountQueryParams;
+export default OrderDiscountParams;

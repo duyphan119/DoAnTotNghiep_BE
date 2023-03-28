@@ -3,6 +3,7 @@ type CreateUserAddressDTO = {
   district: string;
   ward: string;
   address: string;
+  userId: number;
 };
 
 export default CreateUserAddressDTO;

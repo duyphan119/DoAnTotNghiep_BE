@@ -1,26 +1,19 @@
-import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import OrderDiscount from "../entities/orderDiscount.entity";
-import { handleEqual, handlePagination, handleSort } from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { SearchParams } from "../utils/types";
-import GetAll from "../utils/types/GetAllT";
 import {
   CreateOrderDiscountDTO,
-  GetAllOrderDiscountQueryParams,
-} from "../utils/types/orderDiscount";
+  GetAll,
+  OrderDiscountParams,
+  SearchParams,
+} from "../utils/types";
 import orderService from "./order.service";
 
 class OrderDiscountService
   implements
-    ICrudService<
-      GetAll<OrderDiscount>,
-      OrderDiscount,
-      GetAllOrderDiscountQueryParams,
-      CreateOrderDiscountDTO,
-      Partial<CreateOrderDiscountDTO>
-    >
+    ICrudService<OrderDiscount, OrderDiscountParams, CreateOrderDiscountDTO>
 {
   getById(id: number): Promise<OrderDiscount | null> {
     return new Promise(async (resolve, _) => {
@@ -34,7 +27,7 @@ class OrderDiscountService
     });
   }
   createOne(dto: CreateOrderDiscountDTO): Promise<OrderDiscount | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const newItem = await this.getRepository().save(dto);
         resolve(newItem);
@@ -44,26 +37,35 @@ class OrderDiscountService
       }
     });
   }
-  createMany(listDto: CreateOrderDiscountDTO[]): Promise<OrderDiscount[]> {
-    return new Promise(async (resolve, _) => {
+  createMany(
+    listDto: CreateOrderDiscountDTO[]
+  ): Promise<(OrderDiscount | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const newItems = await this.getRepository().save(listDto);
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
+        );
         resolve(newItems);
       } catch (error) {
         console.log("OrderDiscountService.createMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   updateOne(
     id: number,
     dto: Partial<CreateOrderDiscountDTO>
   ): Promise<OrderDiscount | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        await this.getRepository().update({ id }, dto);
         const existingItem = await this.getRepository().findOneBy({ id });
-        resolve(existingItem);
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...dto,
+          });
+          resolve(newItem);
+        }
       } catch (error) {
         console.log("OrderDiscountService.updateOne error", error);
       }
@@ -72,33 +74,17 @@ class OrderDiscountService
   }
   updateMany(
     inputs: ({ id: number } & Partial<CreateOrderDiscountDTO>)[]
-  ): Promise<OrderDiscount[]> {
-    return new Promise(async (resolve, _) => {
+  ): Promise<(OrderDiscount | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        await Promise.all(
-          inputs.map(
-            (input: { id: number } & Partial<CreateOrderDiscountDTO>) => {
-              const { id, ...dto } = input;
-              return this.getRepository().update({ id }, dto);
-            }
-          )
+        const newItems = await Promise.all(
+          inputs.map(({ id, ...dto }) => this.updateOne(id, dto))
         );
-        resolve(
-          await this.getRepository().find({
-            where: {
-              id: In(
-                inputs.map(
-                  (input: { id: number } & Partial<CreateOrderDiscountDTO>) =>
-                    input.id
-                )
-              ),
-            },
-          })
-        );
+        resolve(newItems);
       } catch (error) {
         console.log("OrderDiscountService.updateMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   deleteOne(id: number): Promise<boolean> {
@@ -171,12 +157,12 @@ class OrderDiscountService
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         const [items, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
-          where: [handleEqual("code", q)],
+          where: [helper.handleEqual("code", q)],
         });
         resolve({ items, count });
       } catch (error) {
@@ -202,6 +188,8 @@ class OrderDiscountService
           code,
         });
 
+        console.log(findOrderDiscount);
+
         if (findOrderDiscount && findOrderDiscount.minPrice <= total) {
           // Kiểm tra người dùng dùng mã này chưa
           const result = await orderService.checkUserUseDiscount(userId, code);
@@ -219,14 +207,12 @@ class OrderDiscountService
     });
   }
 
-  getAll(
-    params: GetAllOrderDiscountQueryParams
-  ): Promise<GetAll<OrderDiscount>> {
+  getAll(params: OrderDiscountParams): Promise<GetAll<OrderDiscount>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         if (q) resolve(await this.search(params));
         else {
           const { code } = params;
@@ -234,7 +220,7 @@ class OrderDiscountService
             order: sort,
             ...wherePagination,
             where: {
-              ...handleEqual("code", code),
+              ...helper.handleEqual("code", code),
             },
           });
           resolve({ items, count });

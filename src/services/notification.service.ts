@@ -2,57 +2,43 @@ import { In, IsNull } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Notification from "../entities/notification.entity";
-import {
-  handleEqual,
-  handleILike,
-  handlePagination,
-  handleSort,
-} from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
 import {
-  GetAll,
-  QueryParams,
-  ResponseData,
-  SearchParams,
-} from "../utils/types";
-import {
   CreateNotificationDTO,
+  GetAll,
   NotificationParams,
-} from "../utils/types/notification";
+} from "../utils/types";
 import notificationTypeService from "./notificationType.service";
 import userService from "./user.service";
 
 class NotificationService
   implements
-    ICrudService<
-      GetAll<Notification> & { countUnRead?: number },
-      Notification,
-      NotificationParams,
-      CreateNotificationDTO,
-      Partial<CreateNotificationDTO>
-    >
+    ICrudService<Notification, NotificationParams, CreateNotificationDTO>
 {
-  getAll(
-    params: NotificationParams
-  ): Promise<GetAll<Notification> & { countUnRead?: number }> {
+  getAll(params: NotificationParams): Promise<GetAll<Notification>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
         if (q) resolve(await this.search(params));
         else {
           const { content, type, notificationTypeId, unread } = params;
-          const { sort } = handleSort(params);
-          const { wherePagination } = handlePagination(params);
+          const { sort } = helper.handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
 
           const [items, count] = await this.getRepository().findAndCount({
             order: sort,
             ...wherePagination,
             where: {
-              ...handleILike("content", content),
-              ...handleEqual("notificationTypeId", notificationTypeId, true),
+              ...helper.handleILike("content", content),
+              ...helper.handleEqual(
+                "notificationTypeId",
+                notificationTypeId,
+                true
+              ),
               ...(type
                 ? {
-                    notificationType: handleILike("name", type),
+                    notificationType: helper.handleILike("name", type),
                   }
                 : {}),
               ...(unread ? { readAt: IsNull() } : {}),
@@ -61,7 +47,7 @@ class NotificationService
               ...(type ? { notificationType: true } : {}),
             },
           });
-          resolve({ items, count, countUnRead: await this.countUnRead() });
+          resolve({ items, count });
         }
       } catch (error) {
         console.log("NotificationService.getAll error", error);
@@ -255,18 +241,18 @@ class NotificationService
       }
     });
   }
-  search(params: SearchParams): Promise<GetAll<Notification>> {
+  search(params: NotificationParams): Promise<GetAll<Notification>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         const [items, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
           where: [
-            handleILike("content", q),
-            handleEqual("notificationTypeId", q, true),
+            helper.handleILike("content", q),
+            helper.handleEqual("notificationTypeId", q, true),
           ],
         });
         resolve({ items, count });

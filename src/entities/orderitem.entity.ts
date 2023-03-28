@@ -17,24 +17,42 @@ class OrderItem {
   id: number;
 
   @Column({ nullable: false, name: "madonhang" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   orderId: number;
 
-  // @Column({ nullable: false, name: "mahang" })
-  // @IsNumber()
-  // productId: number;
-
   @Column({ nullable: true, name: "mahangbienthe" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   productVariantId: number;
 
   @Column({ nullable: false, name: "soluong" })
-  @IsNumber()
-  @Min(1)
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
+  @Min(1, {
+    message: "This field must be greater than or equal 1",
+  })
   quantity: number;
 
   @Column({ nullable: false, name: "giaban" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   price: number;
 
   @CreateDateColumn({ name: "ngaytao" })

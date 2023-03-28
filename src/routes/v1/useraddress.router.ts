@@ -5,8 +5,8 @@ import { getUser, requireLogin } from "../../middlewares/auth.middleware";
 const router = Router();
 
 router.get("/user", getUser, userAddressController.getByUserId);
-router.post("/", requireLogin, userAddressController.createUserAddress);
-router.patch("/:id", requireLogin, userAddressController.updateUserAddress);
-router.delete("/:id", requireLogin, userAddressController.deleteUserAddress);
+router.post("/", requireLogin, userAddressController.createOne);
+router.patch("/:id", requireLogin, userAddressController.updateOne);
+router.delete("/:id", requireLogin, userAddressController.deleteOne);
 
 export default router;

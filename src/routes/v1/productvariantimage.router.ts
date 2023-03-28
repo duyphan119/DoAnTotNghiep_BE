@@ -6,22 +6,14 @@ const router = Router();
 
 // router.get("/:id", variantController.getVariantById);
 router.get("/", productVariantImageController.getAll);
-router.post(
+router.post("/many", requireIsAdmin, productVariantImageController.createMany);
+// router.post("/", requireIsAdmin, variantController.createVariant);
+router.patch("/:id", requireIsAdmin, productVariantImageController.updateOne);
+router.delete(
   "/many",
   requireIsAdmin,
-  productVariantImageController.createProductVariantImages
+  productVariantImageController.deleteMany
 );
-// router.post("/", requireIsAdmin, variantController.createVariant);
-router.patch(
-  "/:id",
-  requireIsAdmin,
-  productVariantImageController.updateProductVariantImage
-);
-router.delete(
-  "/:id",
-  requireIsAdmin,
-  productVariantImageController.deleteProductVariantImage
-);
-// router.delete("/", requireIsAdmin, variantController.deleteVariants);
+router.delete("/:id", requireIsAdmin, productVariantImageController.deleteOne);
 
 export default router;

@@ -2,27 +2,26 @@ import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import SettingWebsite from "../entities/settingWebsite.entity";
-import { handleEqual } from "../utils";
-import { GetAll, ResponseData } from "../utils/types";
+import helper from "../utils";
 import {
+  GetAll,
+  ResponseData,
   CreateSettingWebsiteDTO,
-  GetAllSettingWebsiteQueryParams,
-} from "../utils/types/settingWebsite";
+  SettingWebsiteParams,
+} from "../utils/types";
 
 class SettingWebsiteService {
   getRepository() {
     return AppDataSource.getRepository(SettingWebsite);
   }
 
-  getAll(
-    query: GetAllSettingWebsiteQueryParams
-  ): Promise<GetAll<SettingWebsite>> {
+  getAll(query: SettingWebsiteParams): Promise<GetAll<SettingWebsite>> {
     return new Promise(async (resolve, _) => {
       try {
         const { key } = query;
         const [items, count] = await this.getRepository().findAndCount({
           where: {
-            ...handleEqual("key", key),
+            ...helper.handleEqual("key", key),
           },
         });
         resolve({ items, count });

@@ -2,82 +2,180 @@ import slugify from "slugify";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import BlogCategory from "../entities/blogCategory.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
-import { GetAll, QueryParams, SearchParams } from "../utils/types";
-import {
-  CreateBlogCategoryDTO,
-  GetAllBlogCategoryQueryParams,
-} from "../utils/types/blogCategory";
+import helper from "../utils";
+import { ICrudService } from "../utils/interfaces";
+import { GetAll, SearchParams } from "../utils/types";
+import { BlogCategoryParams, CreateBlogCategoryDTO } from "../utils/types";
 import blogService from "./blog.service";
 
-class BlogCategoryService {
+class BlogCategoryService
+  implements
+    ICrudService<BlogCategory, BlogCategoryParams, CreateBlogCategoryDTO>
+{
+  createMany(
+    listDto: CreateBlogCategoryDTO[]
+  ): Promise<(BlogCategory | null)[]> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
+        );
+        resolve(newItems);
+      } catch (error) {
+        console.log("BlogCategoryService.createMany error", error);
+      }
+      resolve([]);
+    });
+  }
+  updateMany(
+    inputs: ({ id: number } & Partial<CreateBlogCategoryDTO>)[]
+  ): Promise<(BlogCategory | null)[]> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const newItems = await Promise.all(
+          inputs.map((input) => {
+            const { id, ...dto } = input;
+            return this.updateOne(id, dto);
+          })
+        );
+        resolve(newItems);
+      } catch (error) {
+        console.log("BlogCategoryService.updateMany error", error);
+      }
+      resolve([]);
+    });
+  }
+  deleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.deleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  deleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.deleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.softDeleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.softDeleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(id);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.restoreOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("BlogCategoryService.restoreMany error", error);
+        resolve(false);
+      }
+    });
+  }
   getRepository() {
     return AppDataSource.getRepository(BlogCategory);
   }
 
-  getAll(query: GetAllBlogCategoryQueryParams): Promise<GetAll<BlogCategory>> {
+  getAll(params: BlogCategoryParams): Promise<GetAll<BlogCategory>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { name, slug, desciption, q, blogs } = query;
-        const { sort } = handleSort(query);
-        const { wherePagination } = handlePagination(query);
+        const { q } = params;
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
 
         if (q) {
-          resolve(await this.search(query));
+          resolve(await this.search(params));
         } else {
-          const [blogCategories, count] =
-            await this.getRepository().findAndCount({
-              order: sort,
-              where: {
-                ...handleILike("name", name),
-                ...handleILike("slug", slug),
-                ...handleILike("desciption", desciption),
-              },
-              ...wherePagination,
-            });
+          const { name, slug, desciption, blogs } = params;
+          const [items, count] = await this.getRepository().findAndCount({
+            order: sort,
+            where: {
+              ...helper.handleILike("name", name),
+              ...helper.handleILike("slug", slug),
+              ...helper.handleILike("desciption", desciption),
+            },
+            ...wherePagination,
+          });
           if (blogs) {
             const results = await Promise.all(
-              blogCategories.map((blogCategory) =>
+              items.map((blogCategory) =>
                 blogService.getAll({
-                  blogCategoryId: "" + blogCategory.id,
-                  limit: "" + 4,
+                  blogCategoryId: `${blogCategory.id}`,
+                  limit: `${4}`,
                 })
               )
             );
             results.forEach((data, index) => {
-              blogCategories[index].blogs = data.items;
+              items[index].blogs = data.items;
             });
           }
-          resolve({ items: blogCategories, count });
+          resolve({ items, count });
         }
       } catch (error) {
-        console.log("BlogCategoryService --- getAll --- error", error);
+        console.log("BlogCategoryService.getAll error", error);
       }
       resolve(EMPTY_ITEMS);
     });
   }
 
-  search(query: SearchParams): Promise<GetAll<BlogCategory>> {
+  search(params: BlogCategoryParams): Promise<GetAll<BlogCategory>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { q } = query;
-        const { sort } = handleSort(query);
-        const { wherePagination } = handlePagination(query);
+        const { q } = params;
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
 
-        const [blogCategories, count] = await this.getRepository().findAndCount(
-          {
-            order: sort,
-            where: [
-              handleILike("name", q),
-              handleILike("slug", q),
-              handleILike("desciption", q),
-            ],
-            ...wherePagination,
-          }
-        );
-        resolve({ items: blogCategories, count });
+        const [items, count] = await this.getRepository().findAndCount({
+          order: sort,
+          where: [
+            helper.handleILike("name", q),
+            helper.handleILike("slug", q),
+            helper.handleILike("desciption", q),
+          ],
+          ...wherePagination,
+        });
+        resolve({ items, count });
       } catch (error) {
-        console.log("BlogCategoryService --- search --- error", error);
+        console.log("BlogCategoryService.search error", error);
       }
       resolve(EMPTY_ITEMS);
     });
@@ -89,14 +187,14 @@ class BlogCategoryService {
         const item = await this.getRepository().findOneBy({ id });
         resolve(item);
       } catch (error) {
-        console.log("BlogCategoryService --- createOne --- error", error);
+        console.log("BlogCategoryService.createOne error", error);
       }
       resolve(null);
     });
   }
 
   createOne(dto: CreateBlogCategoryDTO): Promise<BlogCategory | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const { name } = dto;
         const newItem = await this.getRepository().save({
@@ -105,7 +203,7 @@ class BlogCategoryService {
         });
         resolve(newItem);
       } catch (error) {
-        console.log("BlogCategoryService --- createOne --- error", error);
+        console.log("BlogCategoryService.createOne error", error);
       }
       resolve(null);
     });
@@ -115,67 +213,24 @@ class BlogCategoryService {
     id: number,
     dto: Partial<CreateBlogCategoryDTO>
   ): Promise<BlogCategory | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        const { name } = dto;
-        const item = await this.getById(id);
-        if (item) {
+        const existingItem = await this.getById(id);
+        if (existingItem) {
+          const { name } = dto;
           const newItem = await this.getRepository().save({
-            ...item,
+            ...existingItem,
             ...dto,
-            slug: name
-              ? slugify(name, { lower: true, locale: "vi" })
-              : item.slug,
+            ...(name
+              ? { slug: slugify(name, { lower: true, locale: "vi" }) }
+              : {}),
           });
           resolve(newItem);
         }
       } catch (error) {
-        console.log("BlogCategoryService --- updateOne --- error", error);
+        console.log("BlogCategoryService.updateOne error", error);
       }
       resolve(null);
-    });
-  }
-
-  softDeleteBlogCategory(id: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().softDelete({ id });
-        resolve(true);
-      } catch (error) {
-        console.log(
-          "BlogCategoryService --- softDeleteBlogCategory --- error",
-          error
-        );
-        resolve(false);
-      }
-    });
-  }
-  restoreBlogCategory(id: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().restore({ id });
-        resolve(true);
-      } catch (error) {
-        console.log(
-          "BlogCategoryService --- restoreBlogCategory --- error",
-          error
-        );
-        resolve(false);
-      }
-    });
-  }
-  deleteBlogCategory(id: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        await this.getRepository().delete({ id });
-        resolve(true);
-      } catch (error) {
-        console.log(
-          "BlogCategoryService --- deleteBlogCateegory --- error",
-          error
-        );
-        resolve(false);
-      }
     });
   }
 }

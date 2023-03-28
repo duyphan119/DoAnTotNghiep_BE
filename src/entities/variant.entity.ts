@@ -17,7 +17,9 @@ class Variant {
   id: number;
 
   @Column({ nullable: false, unique: true, name: "tenloaithuoctinh" })
-  @IsString()
+  @IsString({
+    message: "This field must be string",
+  })
   name: string;
 
   @CreateDateColumn({ name: "ngaytao" })

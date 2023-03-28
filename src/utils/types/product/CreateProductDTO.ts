@@ -19,6 +19,8 @@ type CreateProductDTO = {
   thumbnail: string;
   detail: string;
   description: string;
+  metaDescription: string;
+  metaKeywords: string;
 }>;
 
 export default CreateProductDTO;

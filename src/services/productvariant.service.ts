@@ -2,24 +2,18 @@ import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import ProductVariant from "../entities/productVariant.entity";
 import VariantValue from "../entities/variantValue.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { GetAll, SearchParams } from "../utils/types";
 import {
+  GetAll,
+  SearchParams,
   CreateProductVariantDTO,
   ProductVariantParams,
-} from "../utils/types/productVariant";
-import productService from "./product.service";
+} from "../utils/types";
 
 class ProductVariantService
   implements
-    ICrudService<
-      GetAll<ProductVariant>,
-      ProductVariant,
-      ProductVariantParams,
-      CreateProductVariantDTO,
-      Partial<CreateProductVariantDTO>
-    >
+    ICrudService<ProductVariant, ProductVariantParams, CreateProductVariantDTO>
 {
   getAll(params: ProductVariantParams): Promise<GetAll<ProductVariant>> {
     return new Promise(async (resolve, _) => {
@@ -28,8 +22,8 @@ class ProductVariantService
         if (q) resolve(await this.search(params));
         else {
           const { productId, variant_values } = params;
-          const { sort } = handleSort(params);
-          const { wherePagination } = handlePagination(params);
+          const { sort } = helper.handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
           const [items, count] = await this.getRepository().findAndCount({
             order: sort,
             ...wherePagination,
@@ -58,7 +52,7 @@ class ProductVariantService
     });
   }
   createOne(dto: CreateProductVariantDTO): Promise<ProductVariant | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const newItem = await this.getRepository().save({
           ...dto,
@@ -71,23 +65,27 @@ class ProductVariantService
       }
     });
   }
-  createMany(listDto: CreateProductVariantDTO[]): Promise<ProductVariant[]> {
-    return new Promise(async (resolve, _) => {
+  createMany(
+    listDto: CreateProductVariantDTO[]
+  ): Promise<(ProductVariant | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const newItems = await this.getRepository().save(
-          listDto.map((dto) => ({
-            ...dto,
-            code: this.generateCode(dto.productId, dto.variantValues),
-          }))
-        );
+        const ngu = listDto.map((dto) => ({
+          productId: dto.productId,
+          code: this.generateCode(dto.productId, dto.variantValues),
+          variantValues: dto.variantValues,
+          price: dto.price,
+          inventory: dto.inventory,
+          name: this.generateName(dto.variantValues),
+        }));
+        const newItems = await this.getRepository().save(ngu);
         resolve(newItems);
       } catch (error) {
         console.log("ProductVariantService.createMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
-
   generateName(variantValues: VariantValue[]): string {
     const arr = [...variantValues];
     arr.sort((a, b) => a.id - b.id);
@@ -98,26 +96,29 @@ class ProductVariantService
     id: number,
     dto: Partial<CreateProductVariantDTO>
   ): Promise<ProductVariant | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        await this.getRepository().update(
-          { id },
-          {
+        const existingItem = await this.getRepository().findOneBy({ id });
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
             ...dto,
-            ...(dto.productId &&
-            dto.variantValues &&
-            dto.variantValues.length > 0
-              ? { code: this.generateCode(dto.productId, dto.variantValues) }
-              : {}),
             ...(dto.variantValues && dto.variantValues.length > 0
               ? {
                   name: this.generateName(dto.variantValues),
+                  ...(dto.productId
+                    ? {
+                        code: this.generateCode(
+                          dto.productId,
+                          dto.variantValues
+                        ),
+                      }
+                    : {}),
                 }
               : {}),
-          }
-        );
-        const existingItem = await this.getRepository().findOneBy({ id });
-        resolve(existingItem);
+          });
+          resolve(newItem);
+        }
       } catch (error) {
         console.log("ProductVariantService.updateOne error", error);
       }
@@ -126,15 +127,13 @@ class ProductVariantService
   }
   updateMany(
     inputs: ({ id: number } & Partial<CreateProductVariantDTO>)[]
-  ): Promise<ProductVariant[]> {
-    return new Promise(async (resolve, _) => {
+  ): Promise<(ProductVariant | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const items = await Promise.all(
+        const newItems = await Promise.all(
           inputs.map((input) => this.updateOne(input.id, input))
         );
-        resolve(
-          items.filter((item) => (item ? true : false)) as ProductVariant[]
-        );
+        resolve(newItems);
       } catch (error) {
         console.log("ProductVariantService.updateMany error", error);
       }
@@ -211,12 +210,12 @@ class ProductVariantService
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         const [items, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
-          where: [handleILike("name", q)],
+          where: [helper.handleILike("name", q)],
           relations: {
             variantValues: true,
           },

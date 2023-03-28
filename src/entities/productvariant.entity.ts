@@ -28,23 +28,38 @@ class ProductVariant {
   id: number;
 
   @Column({ nullable: true, name: "tenhangbienthe" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   name: string;
 
   @Column({ nullable: false, name: "mamathangbienthe", unique: true })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   code: string;
 
   @Column({ default: 0, name: "soluongton" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   inventory: number;
 
   @Column({ nullable: false, name: "giaban" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   price: number;
 
   @Column({ nullable: false, name: "mahang" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   productId: number;
 
   @CreateDateColumn({ name: "ngaytao" })
@@ -76,41 +91,37 @@ export class ProductVariantSubscriber
     return ProductVariant;
   }
 
-  afterInsert(event: InsertEvent<ProductVariant>): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const productId = event.entity.productId;
-        const totalInventory = await productVariantService.totalInventory(
-          productId
-        );
-        resolve(
-          productService.updateOne(productId, { inventory: totalInventory })
-        );
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
+  // afterInsert(event: InsertEvent<ProductVariant>): Promise<any> {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       const productId = event.entity.productId;
+  //       const totalInventory = await productVariantService.totalInventory(
+  //         productId
+  //       );
+  //       resolve(
+  //         productService.updateOne(productId, { inventory: totalInventory })
+  //       );
+  //     } catch (error) {}
+  //   });
+  // }
 
-  afterUpdate(event: UpdateEvent<ProductVariant>): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (event.entity) {
-          const { productId } = event.entity;
-          if (productId) {
-            const totalInventory = await productVariantService.totalInventory(
-              productId
-            );
-            resolve(
-              productService.updateOne(productId, {
-                inventory: totalInventory,
-              })
-            );
-          }
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
+  // afterUpdate(event: UpdateEvent<ProductVariant>): Promise<any> {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       if (event.entity) {
+  //         const { productId } = event.entity;
+  //         if (productId) {
+  //           const totalInventory = await productVariantService.totalInventory(
+  //             productId
+  //           );
+  //           resolve(
+  //             productService.updateOne(productId, {
+  //               inventory: totalInventory,
+  //             })
+  //           );
+  //         }
+  //       }
+  //     } catch (error) {}
+  //   });
+  // }
 }

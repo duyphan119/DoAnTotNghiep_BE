@@ -13,23 +13,28 @@ class UserAddress {
   id: number;
 
   @Column({ nullable: false, name: "matk" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ nullable: true, name: "tinh" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   province: string;
 
   @Column({ nullable: true, name: "quan" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   district: string;
 
   @Column({ nullable: true, name: "phuong" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   ward: string;
 
   @Column({ nullable: true, name: "diachi" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   address: string;
 
   @CreateDateColumn({ name: "ngaytao" })

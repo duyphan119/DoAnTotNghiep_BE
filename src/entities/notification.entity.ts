@@ -17,11 +17,16 @@ class Notification {
   id: number;
 
   @Column({ name: "noidung", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   content: string;
 
   @Column({ name: "matk", nullable: false })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ name: "ngaydoc", nullable: true })
@@ -30,7 +35,7 @@ class Notification {
   @Column({ name: "matk_dadoc", nullable: true })
   readBy: number;
 
-  @Column({ name: "maloaithongbao", nullable: false })
+  @Column({ name: "maloaithongbao", nullable: true, default: 1 })
   notificationTypeId: number;
 
   @CreateDateColumn({ name: "ngaytao" })

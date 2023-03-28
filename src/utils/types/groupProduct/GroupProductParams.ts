@@ -1,13 +1,12 @@
 import SearchParams from "../SearchParams";
 
-type GetAllGroupProductQueryParams = SearchParams &
+type GroupProductParams = SearchParams &
   Partial<{
     name: string;
     slug: string;
     description: string;
-    forHeader: string;
     relatedSlug: string;
     requireThumbnail: string;
   }>;
 
-export default GetAllGroupProductQueryParams;
+export default GroupProductParams;

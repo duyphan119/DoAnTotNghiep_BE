@@ -1,25 +1,21 @@
-import { GetAll, SearchParams } from "../types";
+import { GetAll } from "../types";
 
-interface ICrudService<
-  GetAllModel,
-  Model,
-  QueryParams,
-  CreateItemDto,
-  UpdateItemDto
-> {
-  getAll(params: QueryParams): Promise<GetAllModel>;
+interface ICrudService<Model, Params, CreateModelDto> {
+  search(params: Params): Promise<GetAll<Model>>;
+  getAll(params: Params): Promise<GetAll<Model>>;
   getById(id: number): Promise<Model | null>;
-  createOne(dto: CreateItemDto): Promise<Model | null>;
-  createMany(listDto: CreateItemDto[]): Promise<Model[]>;
-  updateOne(id: number, dto: UpdateItemDto): Promise<Model | null>;
-  updateMany(inputs: Array<{ id: number } & UpdateItemDto>): Promise<Model[]>;
+  createOne(dto: CreateModelDto): Promise<Model | null>;
+  createMany(listDto: CreateModelDto[]): Promise<Array<Model | null>>;
+  updateOne(id: number, dto: Partial<CreateModelDto>): Promise<Model | null>;
+  updateMany(
+    inputs: Array<{ id: number } & Partial<CreateModelDto>>
+  ): Promise<Array<Model | null>>;
   deleteOne(id: number): Promise<boolean>;
   deleteMany(listId: number[]): Promise<boolean>;
   softDeleteOne(id: number): Promise<boolean>;
   softDeleteMany(listId: number[]): Promise<boolean>;
   restoreOne(id: number): Promise<boolean>;
   restoreMany(listId: number[]): Promise<boolean>;
-  search(params: SearchParams): Promise<GetAll<Model>>;
 }
 
 export default ICrudService;

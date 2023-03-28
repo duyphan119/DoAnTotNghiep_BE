@@ -1,28 +1,12 @@
-import slugify from "slugify";
-import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Blog from "../entities/blog.entity";
-import {
-  handleEqual,
-  handleILike,
-  handlePagination,
-  handleSort,
-} from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { GetAll, ResponseData, SearchParams } from "../utils/types";
-import { CreateBlogDTO, BlogParams } from "../utils/types/blog";
+import { GetAll, ResponseData } from "../utils/types";
+import { BlogParams, CreateBlogDTO } from "../utils/types";
 
-class BlogService
-  implements
-    ICrudService<
-      GetAll<Blog>,
-      Blog,
-      BlogParams,
-      CreateBlogDTO & { userId: number },
-      Partial<CreateBlogDTO> & { userId: number }
-    >
-{
+class BlogService implements ICrudService<Blog, BlogParams, CreateBlogDTO> {
   getAll(params: BlogParams): Promise<GetAll<Blog>> {
     return new Promise(async (resolve, _) => {
       try {
@@ -37,18 +21,17 @@ class BlogService
             blogCategoryId,
             blogCategorySlug,
             blogCategory,
-            q,
           } = params;
-          const { wherePagination } = handlePagination(params);
-          const { sort } = handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
+          const { sort } = helper.handleSort(params);
           const [blogs, count] = await this.getRepository().findAndCount({
             order: sort,
             where: {
-              ...handleILike("heading", heading),
-              ...handleILike("title", title),
-              ...handleILike("slug", slug),
-              ...handleILike("content", content),
-              ...handleEqual("blogCategoryId", blogCategoryId, true),
+              ...helper.handleILike("heading", heading),
+              ...helper.handleILike("title", title),
+              ...helper.handleILike("slug", slug),
+              ...helper.handleILike("content", content),
+              ...helper.handleEqual("blogCategoryId", blogCategoryId, true),
               ...(blogCategorySlug
                 ? {
                     blogCategory: {
@@ -98,56 +81,38 @@ class BlogService
       }
     });
   }
-  createOne(dto: CreateBlogDTO & { userId: number }): Promise<Blog | null> {
-    return new Promise(async (resolve, _) => {
+  createOne(dto: CreateBlogDTO): Promise<Blog | null> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const newItem = await this.getRepository().save({
-          ...dto,
-          slug: slugify(dto.title, { lower: true, locale: "vi" }),
-        });
+        const newItem = await this.getRepository().save(dto);
         resolve(newItem);
       } catch (error) {
-        console.log("BlogService.createOne", error);
-        resolve(null);
+        console.log("BlogService.getById error", error);
       }
+      resolve(null);
     });
   }
-  createMany(
-    listDto: Array<CreateBlogDTO & { userId: number }>
-  ): Promise<Blog[]> {
-    return new Promise(async (resolve, _) => {
+  createMany(listDto: CreateBlogDTO[]): Promise<(Blog | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const newItems = await this.getRepository().save(
-          listDto.map((dto) => ({
-            ...dto,
-            slug: slugify(dto.title, { lower: true, locale: "vi" }),
-          }))
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
         );
         resolve(newItems);
       } catch (error) {
         console.log("BlogService.createMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
-  updateOne(
-    id: number,
-    dto: Partial<Partial<CreateBlogDTO> & { userId: number }>
-  ): Promise<Blog | null> {
-    return new Promise(async (resolve, _) => {
+  updateOne(id: number, dto: Partial<CreateBlogDTO>): Promise<Blog | null> {
+    return new Promise(async (resolve, reject) => {
       try {
-        const item = await this.getRepository().findOneBy({
-          id,
-          userId: dto.userId,
-        });
-        if (item) {
-          const { title } = dto;
+        const existingItem = await this.getById(id);
+        if (existingItem) {
           const newItem = await this.getRepository().save({
-            ...item,
+            ...existingItem,
             ...dto,
-            ...(title
-              ? { slug: slugify(title, { lower: true, locale: "vi" }) }
-              : {}),
           });
           resolve(newItem);
         }
@@ -158,41 +123,21 @@ class BlogService
     });
   }
   updateMany(
-    inputs: ({ id: number } & Partial<CreateBlogDTO> & { userId: number })[]
-  ): Promise<Blog[]> {
-    return new Promise(async (resolve, _) => {
+    inputs: ({ id: number } & Partial<CreateBlogDTO>)[]
+  ): Promise<(Blog | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        await Promise.all(
-          inputs.map(
-            (
-              input: { id: number } & Partial<CreateBlogDTO> & {
-                  userId: number;
-                }
-            ) => {
-              const { id, ...dto } = input;
-              return this.getRepository().update({ id }, dto);
-            }
-          )
-        );
-        resolve(
-          await this.getRepository().find({
-            where: {
-              id: In(
-                inputs.map(
-                  (
-                    input: { id: number } & Partial<CreateBlogDTO> & {
-                        userId: number;
-                      }
-                  ) => input.id
-                )
-              ),
-            },
+        const newItems = await Promise.all(
+          inputs.map((input) => {
+            const { id, ...dto } = input;
+            return this.updateOne(id, dto);
           })
         );
+        resolve(newItems);
       } catch (error) {
         console.log("BlogService.updateMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   deleteOne(id: number): Promise<boolean> {
@@ -261,20 +206,20 @@ class BlogService
       }
     });
   }
-  search(params: SearchParams): Promise<GetAll<Blog>> {
+  search(params: BlogParams): Promise<GetAll<Blog>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { wherePagination } = handlePagination(params);
-        const { sort } = handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort } = helper.handleSort(params);
         const [blogs, count] = await this.getRepository().findAndCount({
           order: sort,
           where: [
-            handleILike("heading", q),
-            handleILike("title", q),
-            handleILike("slug", q),
-            handleILike("content", q),
-            handleEqual("blogCategoryId", q, true),
+            helper.handleILike("heading", q),
+            helper.handleILike("title", q),
+            helper.handleILike("slug", q),
+            helper.handleILike("content", q),
+            helper.handleEqual("blogCategoryId", q, true),
             {
               blogCategory: {
                 slug: q,

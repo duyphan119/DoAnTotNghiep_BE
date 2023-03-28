@@ -1,6 +1,5 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsNumber, IsString } from "class-validator";
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -21,15 +20,25 @@ class VariantValue {
   id: number;
 
   @Column({ nullable: false, unique: true, name: "giatri" })
-  @IsString()
+  @IsString({
+    message: "This field must be string",
+  })
   value: string;
 
   @Column({ nullable: false, unique: true, name: "mathuoctinh" })
-  @IsString()
+  @IsString({
+    message: "This field must be string",
+  })
   code: string;
 
+  @Column({ nullable: true, default: true, name: "cohinhanh" })
+  @IsBoolean({
+    message: "This field must be boolean",
+  })
+  hasThumbnail: boolean;
+
   @Column({ name: "madinhdanhloaithuoctinh", default: 1 })
-  @IsNumber()
+  @IsNumber({}, { message: "This field must be number" })
   variantId: number;
 
   @CreateDateColumn({ name: "ngaytao" })

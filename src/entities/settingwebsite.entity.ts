@@ -13,11 +13,11 @@ class SettingWebsite {
   id: number;
 
   @Column({ name: "tenthuoctinh" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   key: string;
 
   @Column({ name: "giatri" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   value: string;
 
   @CreateDateColumn()

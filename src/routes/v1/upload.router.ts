@@ -10,7 +10,7 @@ import {
   STATUS_OK,
 } from "../../constantList";
 import { upload } from "../../middlewares/upload.middleware";
-import { generateFolder } from "../../utils";
+import helper from "../../utils";
 const uploadRouter = Router();
 uploadRouter.post(
   "/single",
@@ -18,7 +18,7 @@ uploadRouter.post(
   async (req: Request, res: Response) => {
     if (req.file) {
       const img = await getCloudinary().v2.uploader.upload(req.file.path, {
-        folder: "DoAnTotNghiep_BE/" + generateFolder(new Date()),
+        folder: "DoAnTotNghiep_BE/" + helper.generateFolder(new Date()),
       });
       const unlinkAsync = promisify(fs.unlink);
       const path = __dirname.split("dist")[0] + req.file.path;
@@ -27,7 +27,7 @@ uploadRouter.post(
         .status(STATUS_CREATED)
         .json({ message: MSG_SUCCESS, data: img });
     } else {
-      res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+      res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
     }
   }
 );
@@ -49,7 +49,7 @@ uploadRouter.post(
           result.push({ path: filePath });
           promiseImgs.push(
             getCloudinary().v2.uploader.upload(filePath, {
-              folder: "DoAnTotNghiep_BE/" + generateFolder(new Date()),
+              folder: "DoAnTotNghiep_BE/" + helper.generateFolder(new Date()),
             })
           );
         }
@@ -69,7 +69,7 @@ uploadRouter.post(
     } catch (error) {
       console.log(error);
     }
-    return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+    return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
   }
 );
 
@@ -79,11 +79,11 @@ uploadRouter.post("/delete", async (req: Request, res: Response) => {
     await getCloudinary().v2.uploader.destroy(
       "DoAnTotNghiep_BE" + path.split("DoAnTotNghiep_BE")[1].split(".")[0]
     );
-    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess());
   } catch (error) {
     console.log(error);
   }
-  return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+  return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
 });
 
 export default uploadRouter;

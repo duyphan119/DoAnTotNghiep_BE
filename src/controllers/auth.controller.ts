@@ -11,6 +11,7 @@ import {
 } from "../constantList";
 import authService from "../services/auth.service";
 import userService from "../services/user.service";
+import helper from "../utils";
 
 class AuthController {
   async register(req: Request, res: Response) {
@@ -19,6 +20,7 @@ class AuthController {
     let message = "Email is available";
     if (!user) {
       const newUser = await userService.createOne(req.body);
+      console.log(newUser);
       if (newUser) {
         const payload = {
           id: newUser.id,
@@ -110,7 +112,7 @@ class AuthController {
       return res.status(STATUS_OK).json({ data: null, message: MSG_ERROR });
     }
 
-    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess(data));
   }
 
   async changeProfile(req: Request, res: Response) {
@@ -119,14 +121,14 @@ class AuthController {
     const data = await userService.updateOne(userId, req.body);
 
     if (!data) {
-      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
     }
-    return res.status(STATUS_OK).json({ data, message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess(data));
   }
 
   logout(req: Request, res: Response) {
     res.clearCookie(COOKIE_REFRESH_TOKEN_NAME);
-    res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+    res.status(STATUS_OK).json(helper.responseSuccess());
   }
 
   async changePassword(req: Request, res: Response) {
@@ -138,9 +140,9 @@ class AuthController {
       oldPassword
     );
     if (!result) {
-      return res.status(STATUS_INTERVAL_ERROR).json({ message: MSG_ERROR });
+      return res.status(STATUS_INTERVAL_ERROR).json(helper.responseError());
     }
-    return res.status(STATUS_OK).json({ message: MSG_SUCCESS });
+    return res.status(STATUS_OK).json(helper.responseSuccess());
   }
 }
 

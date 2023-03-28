@@ -7,6 +7,10 @@ type UpdateProductDTO = Partial<{
   groupProductId: number;
   price: number;
   inventory: number;
+  detail: string;
+  description: string;
+  metaKeywords: string;
+  metaDescription: string;
   productVariants: Array<ProductVariant>;
   newProductVariants: Array<{
     price: number;

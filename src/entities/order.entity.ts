@@ -35,32 +35,32 @@ class Order {
   id: number;
 
   @Column({ nullable: true, name: "madonhang" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   code: string;
 
   @Column({ nullable: true, name: "hoten" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   fullName: string;
 
   @Column({ nullable: true, length: 10, name: "sodienthoai" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   @Length(10)
   phone: string;
 
   @Column({ nullable: true, name: "tinh" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   province: string;
 
   @Column({ nullable: true, name: "quan" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   district: string;
 
   @Column({ nullable: true, name: "phuong" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   ward: string;
 
   @Column({ nullable: true, name: "diachi" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   address: string;
 
   @Column({
@@ -70,27 +70,39 @@ class Order {
     enum: OrderStatusEnum,
     default: OrderStatusEnum.INCART,
   })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   status: string;
 
   @Column({ default: 0, name: "tienvanchuyen" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   shippingPrice: number;
 
   @Column({
     default: "Thanh toán khi nhận hàng (COD)",
     name: "phuongthucthanhtoan",
   })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   paymentMethod: string;
 
   @Column({ nullable: true, name: "ghichu" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   note: string;
 
   @Column({ nullable: true, name: "diem", default: 0 })
-  @IsNumber()
-  @Min(0)
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
+  @Min(0, {
+    message: "This field must be greater than or equal 0",
+  })
   point: number;
 
   @Column({ nullable: true, default: false, name: "dadathang" })
@@ -106,11 +118,18 @@ class Order {
   isPaid: boolean;
 
   @Column({ nullable: true, name: "ngaydat" })
-  @IsDate()
+  @IsDate({
+    message: "This field must be a date",
+  })
   orderDate: Date;
 
   @Column({ nullable: false, name: "matk" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @CreateDateColumn({ name: "ngaytao" })
@@ -131,10 +150,18 @@ class Order {
   discount: OrderDiscount;
 
   @Column({ name: "madinhdanh_giamgia", nullable: true })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   discountId: number;
 
   @DeleteDateColumn({ name: "ngayxoa" })
   deletedAt?: Date;
+
+  @Column({ name: "tongtien", nullable: true, default: 0 })
+  total: number;
 }
 export default Order;

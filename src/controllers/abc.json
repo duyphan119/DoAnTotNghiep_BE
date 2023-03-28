@@ -1,0 +1,141 @@
+[
+  {
+    "createdAt": "2023-03-26T03:01:25.296Z",
+    "updatedAt": "2023-03-26T03:01:25.296Z",
+    "id": 27,
+    "orderId": 6,
+    "productVariantId": 81,
+    "quantity": 1,
+    "price": 579000,
+    "productVariant": {
+      "createdAt": "2023-03-16T09:38:43.455Z",
+      "updatedAt": "2023-03-23T17:05:55.418Z",
+      "id": 81,
+      "inventory": 10,
+      "price": 579000,
+      "productId": 10,
+      "product": {
+        "createdAt": "2023-03-16T09:38:43.323Z",
+        "updatedAt": "2023-03-23T17:05:55.421Z",
+        "id": 10,
+        "name": "Áo Nỉ Nữ Gia Đình In Gấu BE NICE",
+        "slug": "ao-ni-nu-gia-dinh-in-gau-be-nice",
+        "inventory": 40,
+        "price": 579000,
+        "thumbnail": "https://res.cloudinary.com/dwhjftwvw/image/upload/v1678959511/DoAnTotNghiep_BE/230316/ch5i5szm5fmb5kg4mdvb.jpg",
+        "description": "",
+        "detail": "",
+        "star": 0,
+        "groupProductId": 9,
+        "groupProduct": {
+          "createdAt": "2023-03-26T03:02:33.650Z",
+          "updatedAt": "2023-03-26T03:02:33.650Z",
+          "id": 0,
+          "name": "",
+          "slug": "",
+          "description": "",
+          "thumbnail": "",
+          "sex": "Nam",
+          "isAdult": true,
+          "metaKeywords": "",
+          "metaDescription": ""
+        },
+        "productVariants": [],
+        "images": [
+          {
+            "createdAt": "2023-03-16T09:38:43.813Z",
+            "updatedAt": "2023-03-16T09:38:43.813Z",
+            "id": 17,
+            "productId": 10,
+            "variantValueId": 7,
+            "path": "https://res.cloudinary.com/dwhjftwvw/image/upload/v1678959511/DoAnTotNghiep_BE/230316/ch5i5szm5fmb5kg4mdvb.jpg"
+          }
+        ],
+        "minPrice": 579000,
+        "maxPrice": 579000,
+        "metaKeywords": "",
+        "metaDescription": ""
+      },
+      "name": "Tím / XL",
+      "variantValues": [
+        {
+          "createdAt": "2023-02-19T19:07:13.340Z",
+          "updatedAt": "2023-02-19T19:07:13.340Z",
+          "id": 16,
+          "value": "XL",
+          "variantId": 2,
+          "variant": {
+            "createdAt": "2023-02-19T19:07:07.471Z",
+            "updatedAt": "2023-02-19T19:07:07.471Z",
+            "id": 2,
+            "name": "Kích cỡ",
+            "variantValues": []
+          },
+          "code": "XL",
+          "hasThumbnail": false
+        },
+        {
+          "createdAt": "2023-02-19T19:07:13.340Z",
+          "updatedAt": "2023-02-19T19:07:13.340Z",
+          "id": 7,
+          "value": "Tím",
+          "variantId": 1,
+          "variant": {
+            "createdAt": "2023-02-19T19:07:07.471Z",
+            "updatedAt": "2023-02-19T19:07:07.471Z",
+            "id": 1,
+            "name": "Màu sắc",
+            "variantValues": []
+          },
+          "code": "TIM",
+          "hasThumbnail": true
+        }
+      ],
+      "code": "00010-TIM-XL"
+    },
+    "order": {
+      "createdAt": "2023-03-26T03:02:33.650Z",
+      "updatedAt": "2023-03-26T03:02:33.650Z",
+      "province": "",
+      "district": "",
+      "ward": "",
+      "address": "",
+      "id": 0,
+      "fullName": "",
+      "phone": "",
+      "status": "Giỏ hàng",
+      "shippingPrice": 0,
+      "paymentMethod": "COD",
+      "note": "",
+      "point": 0,
+      "isOrdered": false,
+      "allowCannceled": false,
+      "isPaid": false,
+      "orderDate": "2023-03-26T03:02:33.650Z",
+      "userId": 0,
+      "discountId": 0,
+      "user": {
+        "createdAt": "2023-03-26T03:02:33.650Z",
+        "updatedAt": "2023-03-26T03:02:33.650Z",
+        "id": 0,
+        "fullName": "",
+        "email": "",
+        "phone": "",
+        "isAdmin": false,
+        "point": 0
+      },
+      "items": [],
+      "discount": {
+        "createdAt": "2023-03-26T03:02:33.650Z",
+        "updatedAt": "2023-03-26T03:02:33.650Z",
+        "id": 0,
+        "code": "",
+        "start": "",
+        "end": "",
+        "minPrice": 0,
+        "value": 0
+      },
+      "code": ""
+    }
+  }
+]

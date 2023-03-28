@@ -1,4 +1,2 @@
-import QueryParams from "../QueryParams";
-
-export { default as GetAllCommentProductQueryParams } from "./GetAllCommentProductQueryParams";
+export { default as CommentProductParams } from "./CommentProductParams";
 export { default as CreateCommentProductDTO } from "./CreateCommentProductDTO";

@@ -21,15 +21,25 @@ class RepCommentProduct {
   id: number;
 
   @Column({ name: "matk", nullable: false })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   userId: number;
 
   @Column({ name: "noidung", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   content: string;
 
   @Column({ name: "mabinhluan" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   commentProductId: number;
 
   @ManyToOne(() => CommentProduct, (e) => e.repComments)

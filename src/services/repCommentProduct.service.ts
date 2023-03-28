@@ -2,37 +2,36 @@ import { In } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import RepCommentProduct from "../entities/repCommentProduct.entity";
-import { handleILike, handlePagination, handleSort } from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { GetAll, SearchParams } from "../utils/types";
 import {
+  GetAll,
+  SearchParams,
   CreateRepCommentProductDTO,
-  GetAllRepCommentProductQueryParams,
-} from "../utils/types/repCommentProduct";
+  RepCommentProductParams,
+} from "../utils/types";
 
 class RepCommentProductService
   implements
     ICrudService<
-      GetAll<RepCommentProduct>,
       RepCommentProduct,
-      GetAllRepCommentProductQueryParams,
-      CreateRepCommentProductDTO,
-      Partial<CreateRepCommentProductDTO>
+      RepCommentProductParams,
+      CreateRepCommentProductDTO
     >
 {
   search(params: SearchParams): Promise<GetAll<RepCommentProduct>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { wherePagination } = handlePagination(params);
-        const { sort } = handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort } = helper.handleSort(params);
         const [variants, count] = await this.getRepository().findAndCount({
           order: sort,
           ...wherePagination,
           relations: {
             user: true,
           },
-          where: [handleILike("content", q)],
+          where: [helper.handleILike("content", q)],
         });
         resolve({ items: variants, count });
       } catch (error) {
@@ -41,16 +40,14 @@ class RepCommentProductService
       resolve(EMPTY_ITEMS);
     });
   }
-  getAll(
-    params: GetAllRepCommentProductQueryParams
-  ): Promise<GetAll<RepCommentProduct>> {
+  getAll(params: RepCommentProductParams): Promise<GetAll<RepCommentProduct>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
         if (q) resolve(await this.search(params));
         else {
-          const { wherePagination } = handlePagination(params);
-          const { sort } = handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
+          const { sort } = helper.handleSort(params);
           const [items, count] = await this.getRepository().findAndCount({
             order: sort,
             ...wherePagination,

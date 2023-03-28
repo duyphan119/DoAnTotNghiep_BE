@@ -16,11 +16,11 @@ class NotificationType {
   id: number;
 
   @Column({ name: "tenloaithongbao", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   name: string;
 
   @Column({ name: "hinhanh", nullable: true, default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   icon: string;
 
   @CreateDateColumn({ name: "ngaytao" })

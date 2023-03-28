@@ -9,6 +9,10 @@ cartRouter.get("/user", requireLogin, cartController.getCartByUser);
 cartRouter.post("/login", requireLogin, cartController.loginCreateCart);
 cartRouter.post("/", requireLogin, cartController.createCartItem);
 cartRouter.patch("/:id", requireLogin, cartController.updateCartItem);
-cartRouter.delete("/:id", requireLogin, cartController.deleteCartItem);
+cartRouter.delete(
+  "/:productVariantId",
+  requireLogin,
+  cartController.deleteCartItem
+);
 
 export default cartRouter;

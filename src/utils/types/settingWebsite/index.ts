@@ -1,2 +1,2 @@
 export { default as CreateSettingWebsiteDTO } from "./CreateSettingWebsiteDTO";
-export { default as GetAllSettingWebsiteQueryParams } from "./GetAllSettingWebsiteQueryParams";
+export { default as SettingWebsiteParams } from "./SettingWebsiteParams";

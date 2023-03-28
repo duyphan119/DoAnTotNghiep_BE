@@ -2,28 +2,207 @@ import { Between } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import CommentProduct from "../entities/commentProduct.entity";
-import {
-  handleEqual,
-  handleILike,
-  handlePagination,
-  handleSearchEqual,
-  handleSort,
-  lastDay,
-} from "../utils";
+import helper from "../utils";
+import { ICrudService } from "../utils/interfaces";
 import { GetAll } from "../utils/types";
-import {
-  CreateCommentProductDTO,
-  GetAllCommentProductQueryParams,
-} from "../utils/types/commentProduct";
+import { CreateCommentProductDTO, CommentProductParams } from "../utils/types";
 import productService from "./product.service";
 import repCommentProductService from "./repCommentProduct.service";
+import userService from "./user.service";
 
-class CommentProductService {
+class CommentProductService
+  implements
+    ICrudService<CommentProduct, CommentProductParams, CreateCommentProductDTO>
+{
+  updateMany(
+    inputs: ({ id: number } & Partial<CreateCommentProductDTO>)[]
+  ): Promise<(CommentProduct | null)[]> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const newItems = await Promise.all(
+          inputs.map((input) => {
+            const { id, ...dto } = input;
+            return this.updateOne(id, dto);
+          })
+        );
+        resolve(newItems);
+      } catch (error) {
+        console.log("CommentProductService.updateMany error", error);
+      }
+      resolve([]);
+    });
+  }
+  createMany(
+    listDto: CreateCommentProductDTO[]
+  ): Promise<(CommentProduct | null)[]> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
+        );
+        resolve(newItems);
+      } catch (error) {
+        console.log("CommentProductService.createMany error", error);
+      }
+      resolve([]);
+    });
+  }
+  updateOne(
+    id: number,
+    dto: Partial<CreateCommentProductDTO>
+  ): Promise<CommentProduct | null> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const existingItem = await this.getRepository().findOneBy({ id });
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...dto,
+          });
+          if (dto.star) {
+            await productService.updateStar(newItem.productId);
+          }
+          resolve(newItem);
+        }
+      } catch (error) {
+        console.log("CommentProductService.updateOne error", error);
+      }
+      resolve(null);
+    });
+  }
+  search(params: CommentProductParams): Promise<GetAll<CommentProduct>> {
+    return new Promise(async (resolve, _) => {
+      try {
+        const LIMIT_REP = 3;
+        const { q, product, repComments } = params;
+        const { sort, sortBy, sortType } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
+        let [items, count] = await this.getRepository().findAndCount({
+          order:
+            sortBy === "productName"
+              ? {
+                  product: {
+                    name: sortType,
+                  },
+                }
+              : sort,
+          ...wherePagination,
+          where: [
+            helper.handleILike("content", q),
+            helper.handleEqual("star", q, true),
+            helper.handleEqual("productId", q, true),
+            helper.handleSearchEqual(["star"], q),
+          ],
+          relations: {
+            user: true,
+            ...(product || sortBy === "productName" ? { product: true } : {}),
+            ...(repComments ? { repComments: { user: true } } : {}),
+          },
+        });
+        if (repComments) {
+          const listRes = await Promise.all(
+            items.map((item: CommentProduct) =>
+              repCommentProductService.getRepository().find({
+                where: {
+                  commentProductId: item.id,
+                },
+                relations: {
+                  user: true,
+                },
+                take: LIMIT_REP,
+              })
+            )
+          );
+          items = items.map((item, index) => ({
+            ...item,
+            repComments: listRes[index],
+          }));
+        }
+        // if (userId && productId) {
+        //   userCommentProduct = await this.checkUserCommentProduct(
+        //     userId,
+        //     +productId
+        //   );
+        // }
+        resolve({ items, count });
+      } catch (error) {
+        console.log("CommentProductService.getAll error", error);
+        resolve(EMPTY_ITEMS);
+      }
+    });
+  }
+
+  deleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.deleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  deleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().delete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.deleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(id);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.softDeleteOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  softDeleteMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().softDelete(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.softDeleteMany error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreOne(id: number): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(id);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.restoreOne error", error);
+        resolve(false);
+      }
+    });
+  }
+  restoreMany(listId: number[]): Promise<boolean> {
+    return new Promise(async (resolve, _) => {
+      try {
+        await this.getRepository().restore(listId);
+        resolve(true);
+      } catch (error) {
+        console.log("CommentProductService.restoreMany error", error);
+        resolve(false);
+      }
+    });
+  }
   getRepository() {
     return AppDataSource.getRepository(CommentProduct);
   }
 
-  checkUserCommentProductProduct(
+  checkUserCommentProduct(
     userId: number,
     productId: number
   ): Promise<CommentProduct | null> {
@@ -37,7 +216,10 @@ class CommentProductService {
         });
         resolve(item);
       } catch (error) {
-        console.log("CHECK USER COMMENT PRODUCT ERROR", error);
+        console.log(
+          "CommentProductService.checkUserCommentProduct error",
+          error
+        );
         resolve(null);
       }
     });
@@ -50,13 +232,17 @@ class CommentProductService {
           where: {
             createdAt: Between(
               new Date(`${year}-${month}-01`),
-              new Date(`${year}-${month}-${lastDay(month, year)}`)
+              new Date(`${year}-${month}-${helper.lastDay(month, year)}`)
             ),
           },
         });
 
         resolve(count);
       } catch (error) {
+        console.log(
+          "CommentProductService.countCommentProductByMonth error",
+          error
+        );
         resolve(0);
       }
     });
@@ -73,23 +259,16 @@ class CommentProductService {
         });
         resolve(item);
       } catch (error) {
-        console.log("GET COMMENT PRODUCT BY ID ERROR", error);
+        console.log("CommentProductService.getById error", error);
         resolve(null);
       }
     });
   }
 
-  getAll(
-    query: GetAllCommentProductQueryParams,
-    userId?: number
-  ): Promise<
-    GetAll<CommentProduct> & {
-      userCommentProduct: CommentProduct | null;
-    }
-  > {
+  getAll(params: CommentProductParams): Promise<GetAll<CommentProduct>> {
     return new Promise(async (resolve, _) => {
       try {
-        // const LIMIT_REP = 3;
+        const LIMIT_REP = 3;
         const {
           productId,
           content,
@@ -98,10 +277,10 @@ class CommentProductService {
           repComments,
           sortBy,
           sortType,
-        } = query;
-        let userCommentProduct: CommentProduct | null = null;
-        const { sort } = handleSort(query);
-        const { wherePagination } = handlePagination(query);
+        } = params;
+        // let userCommentProduct: CommentProduct | null = null;
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         let [items, count] = await this.getRepository().findAndCount({
           order:
             sortBy === "productName"
@@ -113,10 +292,10 @@ class CommentProductService {
               : sort,
           ...wherePagination,
           where: {
-            ...handleILike("content", content),
-            ...handleEqual("star", star, true),
-            ...handleEqual("productId", productId, true),
-            ...handleSearchEqual(["star"], star),
+            ...helper.handleILike("content", content),
+            ...helper.handleEqual("star", star, true),
+            ...helper.handleEqual("productId", productId, true),
+            ...helper.handleSearchEqual(["star"], star),
             // ...(userId ? { userId: Not(userId) } : {}),
           },
           relations: {
@@ -126,105 +305,49 @@ class CommentProductService {
             ...(sortBy === "productName" ? { product: true } : {}),
           },
         });
-        // if (repComments) {
-        //   const listRes = await Promise.all(
-        //     items.map((item: CommentProduct) =>
-        //       repCommentProductService.getRepository().find({
-        //         where: {
-        //           commentProductId: item.id,
-        //         },
-        //         relations: {
-        //           user: true,
-        //         },
-        //         take: LIMIT_REP,
-        //       })
-        //     )
-        //   );
-        //   items = items.map((item, index) => ({
-        //     ...item,
-        //     repComments: listRes[index],
-        //   }));
-        // }
-        if (userId && productId) {
-          userCommentProduct = await this.checkUserCommentProductProduct(
-            userId,
-            +productId
+        if (repComments) {
+          const listRes = await Promise.all(
+            items.map((item: CommentProduct) =>
+              repCommentProductService.getRepository().find({
+                where: {
+                  commentProductId: item.id,
+                },
+                relations: {
+                  user: true,
+                },
+                take: LIMIT_REP,
+              })
+            )
           );
+          items = items.map((item, index) => ({
+            ...item,
+            repComments: listRes[index],
+          }));
         }
-        resolve({ items, count, userCommentProduct });
+        // if (userId && productId) {
+        //   userCommentProduct = await this.checkUserCommentProduct(
+        //     userId,
+        //     +productId
+        //   );
+        // }
+        resolve({ items, count });
       } catch (error) {
-        console.log("GET ALL COMMENT PRODUCTS ERROR", error);
-        resolve({ ...EMPTY_ITEMS, userCommentProduct: null });
+        console.log("CommentProductService.getAll error", error);
+        resolve(EMPTY_ITEMS);
       }
     });
   }
 
-  create(
-    userId: number,
-    dto: CreateCommentProductDTO
-  ): Promise<CommentProduct | null> {
-    return new Promise(async (resolve, _) => {
+  createOne(dto: CreateCommentProductDTO): Promise<CommentProduct | null> {
+    return new Promise(async (resolve, reject) => {
       try {
-        let item = await this.getRepository().findOneBy({
-          userId,
-          productId: dto.productId,
-        });
-        if (!item) {
-          item = await this.getRepository().save({
-            ...dto,
-            userId,
-          });
-          resolve(item);
-        } else {
-          item = await this.getRepository().save({ ...item, ...dto });
-        }
+        const newItem = await this.getRepository().save(dto);
         await productService.updateStar(dto.productId);
-        const newItem = await this.getById(item.id);
         resolve(newItem);
       } catch (error) {
-        console.log("CREATE COMMENT PRODUCT ERROR", error);
-        resolve(null);
-      }
-    });
-  }
-
-  update(
-    id: number,
-    userId: number,
-    dto: Partial<CommentProduct>
-  ): Promise<CommentProduct | null> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const item = await this.getRepository().findOneBy({ id });
-        if (item && item.userId === userId) {
-          await this.getRepository().save({ ...item, ...dto });
-          if (dto.star) {
-            await productService.updateStar(item.productId);
-          }
-          const newItem = await this.getById(item.id);
-          resolve(newItem);
-        }
-      } catch (error) {
-        console.log("UPDATE COMMENT PRODUCT ERROR", error);
+        console.log("CommentProductService.createOne error", error);
       }
       resolve(null);
-    });
-  }
-
-  delete(id: number, userId: number): Promise<boolean> {
-    return new Promise(async (resolve, _) => {
-      try {
-        const item = await this.getRepository().findOneBy({ id });
-        if (item && item.userId === userId) {
-          await this.getRepository().delete({ parentId: id });
-          await this.getRepository().delete({ id });
-          await productService.updateStar(item.productId);
-          resolve(true);
-        }
-      } catch (error) {
-        console.log("DELETE COMMENT PRODUCT ERROR", error);
-      }
-      resolve(false);
     });
   }
 }

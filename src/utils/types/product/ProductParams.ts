@@ -1,6 +1,6 @@
 import SearchParams from "../SearchParams";
 
-type GetAllProductQueryParams = SearchParams &
+type ProductParams = SearchParams &
   Partial<{
     name: string;
     slug: string;
@@ -13,4 +13,4 @@ type GetAllProductQueryParams = SearchParams &
     images: string;
   }>;
 
-export default GetAllProductQueryParams;
+export default ProductParams;

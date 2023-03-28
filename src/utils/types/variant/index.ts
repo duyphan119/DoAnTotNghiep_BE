@@ -1,2 +1,2 @@
-export { default as VariantQueryParams } from "./VariantQueryParams";
+export { default as VariantParams } from "./VariantParams";
 export { default as CreateVariantDTO } from "./CreateVariantDTO";

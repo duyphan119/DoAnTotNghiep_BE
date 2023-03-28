@@ -13,19 +13,19 @@ class Advertisement {
   id: number;
 
   @Column({ name: "tieude", default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   title: string;
 
   @Column({ default: "/", name: "lienket" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   href: string;
 
   @Column({ name: "duongdan", nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   path: string;
 
   @Column({ name: "trang", default: "Trang chủ" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   page: string;
 
   @CreateDateColumn({ name: "ngaytao" })

@@ -7,6 +7,7 @@ type CreateOrderDTO = {
   shippingPrice: number;
   fullName: string;
   phone: string;
+  total: number;
   point?: number;
 };
 

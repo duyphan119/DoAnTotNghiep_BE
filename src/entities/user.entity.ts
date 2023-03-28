@@ -24,7 +24,7 @@ class User {
 
   @Column({ nullable: false, name: "hoten" })
   @IsString({
-    message: "Full name must be string",
+    message: "This field must be string",
   })
   fullName: string;
 
@@ -32,26 +32,26 @@ class User {
   @IsEmail(
     {},
     {
-      message: "Email is invalid",
+      message: "This field is invalid",
     }
   )
   email: string;
 
-  @Column({ nullable: false, name: "matkhau" })
+  @Column({ nullable: false, name: "matkhau", select: false })
   @MinLength(6, {
-    message: "Password must have least 6 characters",
+    message: "This field must have least 6 characters",
   })
   @IsString({
-    message: "Password must be string",
+    message: "This field must be string",
   })
   password: string;
 
   @Column({ nullable: false, unique: true, length: 10, name: "sdt" })
   @Length(10, 10, {
-    message: "Phone must have 10 digits",
+    message: "This field must have 10 digits",
   })
   @IsString({
-    message: "Phone must be string",
+    message: "This field must be string",
   })
   phone: string;
 

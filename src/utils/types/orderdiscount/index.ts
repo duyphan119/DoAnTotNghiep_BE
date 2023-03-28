@@ -1,2 +1,2 @@
-export { default as GetAllOrderDiscountQueryParams } from "./GetAllOrderDiscountQueryParams";
+export { default as OrderDiscountParams } from "./OrderDiscountParams";
 export { default as CreateOrderDiscountDTO } from "./CreateOrderDiscountDTO";

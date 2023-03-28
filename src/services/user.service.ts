@@ -1,35 +1,24 @@
 import * as bcrypt from "bcrypt";
-import { Between, Brackets, In } from "typeorm";
+import { Between, Brackets } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import User from "../entities/user.entity";
-import {
-  handleILike,
-  handlePagination,
-  handleSearchILike,
-  handleSort,
-  lastDay,
-} from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import { GetAll, ResponseData, SearchParams } from "../utils/types";
-import { CreateUserDTO, GetAllUserQueryParams } from "../utils/types/user";
+import {
+  CreateUserDTO,
+  GetAll,
+  SearchParams,
+  UserParams,
+} from "../utils/types";
 
-class UserService
-  implements
-    ICrudService<
-      GetAll<User>,
-      User,
-      GetAllUserQueryParams,
-      CreateUserDTO,
-      Partial<CreateUserDTO>
-    >
-{
-  getAll(params: GetAllUserQueryParams): Promise<GetAll<User>> {
+class UserService implements ICrudService<User, UserParams, CreateUserDTO> {
+  getAll(params: UserParams): Promise<GetAll<User>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
 
         if (q) resolve(await this.search(params));
         else {
@@ -39,18 +28,9 @@ class UserService
             ...wherePagination,
             where: {
               isAdmin: false,
-              ...handleILike("email", email),
-              ...handleILike("fullName", fullName),
-              ...handleILike("phone", phone),
-            },
-            select: {
-              id: true,
-              createdAt: true,
-              email: true,
-              fullName: true,
-              point: true,
-              phone: true,
-              updatedAt: true,
+              ...helper.handleILike("email", email),
+              ...helper.handleILike("fullName", fullName),
+              ...helper.handleILike("phone", phone),
             },
           });
           resolve({ items, count });
@@ -73,10 +53,12 @@ class UserService
     });
   }
   createOne(dto: CreateUserDTO): Promise<User | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const { password } = dto;
+
         const hashedPassword = await this.hashPassword(password);
+
         const newItem = await this.getRepository().save({
           ...dto,
           password: hashedPassword,
@@ -84,21 +66,14 @@ class UserService
         resolve(newItem);
       } catch (error) {
         console.log("UserService.createOne", error);
-        resolve(null);
       }
     });
   }
-  createMany(listDto: CreateUserDTO[]): Promise<User[]> {
+  createMany(listDto: CreateUserDTO[]): Promise<(User | null)[]> {
     return new Promise(async (resolve, _) => {
       try {
-        const listHashedPassword = await Promise.all(
-          listDto.map(({ password }) => this.hashPassword(password))
-        );
-        const newItems = await this.getRepository().save(
-          listHashedPassword.map((hashedPassword, index) => ({
-            ...listDto[index],
-            password: hashedPassword,
-          }))
+        const newItems = await Promise.all(
+          listDto.map((dto) => this.createOne(dto))
         );
         resolve(newItems);
       } catch (error) {
@@ -108,11 +83,17 @@ class UserService
     });
   }
   updateOne(id: number, dto: Partial<CreateUserDTO>): Promise<User | null> {
-    return new Promise(async (resolve, _) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        await this.getRepository().update({ id }, dto);
-        const existingItem = await this.getRepository().findOneBy({ id });
-        resolve(existingItem);
+        const existingItem = await this.getById(id);
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...dto,
+            password: existingItem.password,
+          });
+          resolve(newItem);
+        }
       } catch (error) {
         console.log("UserService.updateOne error", error);
       }
@@ -121,30 +102,20 @@ class UserService
   }
   updateMany(
     inputs: ({ id: number } & Partial<CreateUserDTO>)[]
-  ): Promise<User[]> {
-    return new Promise(async (resolve, _) => {
+  ): Promise<(User | null)[]> {
+    return new Promise(async (resolve, reject) => {
       try {
-        await Promise.all(
-          inputs.map((input: { id: number } & Partial<CreateUserDTO>) => {
+        const newItems = await Promise.all(
+          inputs.map((input) => {
             const { id, ...dto } = input;
-            return this.getRepository().update({ id }, dto);
+            return this.updateOne(id, dto);
           })
         );
-        resolve(
-          await this.getRepository().find({
-            where: {
-              id: In(
-                inputs.map(
-                  (input: { id: number } & Partial<CreateUserDTO>) => input.id
-                )
-              ),
-            },
-          })
-        );
+        resolve(newItems);
       } catch (error) {
         console.log("UserService.updateMany error", error);
-        resolve([]);
       }
+      resolve([]);
     });
   }
   deleteOne(id: number): Promise<boolean> {
@@ -217,8 +188,8 @@ class UserService
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
-        const { sortBy, sortType } = handleSort(params);
-        const { skip, take } = handlePagination(params);
+        const { sortBy, sortType } = helper.handleSort(params);
+        const { skip, take } = helper.handlePagination(params);
 
         let queryBuilder = this.getQueryBuilder()
           .where("taikhoan.quyen = :isAdmin", { isAdmin: false })
@@ -271,7 +242,6 @@ class UserService
         resolve(bcrypt.hash(rawPassword, salt));
       } catch (error) {
         console.log("UserService.hashPassword error", error);
-        reject(error);
       }
     });
   }
@@ -281,7 +251,6 @@ class UserService
         resolve(bcrypt.compare(password, hash));
       } catch (error) {
         console.log("UserService.comparePassword error", error);
-        reject(error);
       }
     });
   }
@@ -291,6 +260,7 @@ class UserService
         const user = await this.getRepository().findOneBy({ id });
         if (user) {
           user.point += point;
+          _io.emit("Update point", user.point);
           resolve(await this.getRepository().save(user));
         }
       } catch (error) {
@@ -306,7 +276,7 @@ class UserService
           where: {
             createdAt: Between(
               new Date(`${year}-${month}-01`),
-              new Date(`${year}-${month}-${lastDay(month, year)}`)
+              new Date(`${year}-${month}-${helper.lastDay(month, year)}`)
             ),
           },
         });
@@ -321,7 +291,21 @@ class UserService
   getByEmail(email: string): Promise<User | null> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.getRepository().findOneBy({ email });
+        const user = await this.getRepository().findOne({
+          where: { email },
+          select: {
+            id: true,
+            createdAt: true,
+            email: true,
+            fullName: true,
+            point: true,
+            phone: true,
+            updatedAt: true,
+            password: true,
+            isAdmin: true,
+            deletedAt: true,
+          },
+        });
         resolve(user);
       } catch (error) {
         console.log("UserService.getByEmail error", error);
@@ -336,17 +320,22 @@ class UserService
   ): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
-        const user = await this.getRepository().findOneBy({ id });
+        const user = await this.getRepository().findOne({
+          where: { id },
+          select: { password: true },
+        });
         if (user) {
           const compareResult = await this.comparePassword(
             oldPassword,
             user.password
           );
           if (compareResult) {
-            await this.getRepository().save({
-              ...user,
-              password: await this.hashPassword(newPassword),
-            });
+            await this.getRepository().update(
+              { id },
+              {
+                password: await this.hashPassword(newPassword),
+              }
+            );
             resolve(true);
           }
         }

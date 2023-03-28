@@ -1,27 +1,26 @@
 import { Router } from "express";
 import blogcategoryController from "../../controllers/blogCategory.controller";
-import { getUser, requireIsAdmin } from "../../middlewares/auth.middleware";
+import { requireIsAdmin } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
 router.get("/:id", blogcategoryController.getById);
-router.get("/", getUser, blogcategoryController.getAll);
-router.post("/", requireIsAdmin, blogcategoryController.createBlogCategory);
-router.patch("/:id", requireIsAdmin, blogcategoryController.updateBlogCategory);
+router.get("/", blogcategoryController.getAll);
+router.post("/", requireIsAdmin, blogcategoryController.createOne);
+router.patch("/:id", requireIsAdmin, blogcategoryController.updateOne);
+router.delete("/many", requireIsAdmin, blogcategoryController.softDeleteMany);
+router.delete("/:id", requireIsAdmin, blogcategoryController.softDeleteOne);
 router.delete(
-  "/force/:id",
+  "/restore/many",
   requireIsAdmin,
-  blogcategoryController.deleteBlogCategory
-);
-router.delete(
-  "/:id",
-  requireIsAdmin,
-  blogcategoryController.softDeleteBlogCategory
+  blogcategoryController.restoreMany
 );
 router.delete(
   "/restore/:id",
   requireIsAdmin,
-  blogcategoryController.restoreBlogCategory
+  blogcategoryController.restoreOne
 );
+router.delete("/force/many", requireIsAdmin, blogcategoryController.deleteMany);
+router.delete("/force/:id", requireIsAdmin, blogcategoryController.deleteOne);
 
 export default router;

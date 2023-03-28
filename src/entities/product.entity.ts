@@ -22,19 +22,19 @@ class Product {
   id: number;
 
   @Column({ nullable: false, name: "tenhang" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   name: string;
 
   @Column({ nullable: false, unique: true, name: "duongdan" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   slug: string;
 
   @Column({ nullable: true, name: "hinhanh" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   thumbnail: string;
 
   @Column({ nullable: true, name: "mota" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   description: string;
 
   @Column({ nullable: true, name: "sao", default: 0, type: "float4" })
@@ -44,18 +44,28 @@ class Product {
   detail: string;
 
   @Column({ default: 1, name: "manhomsanpham" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   groupProductId: number;
 
   @OneToMany(() => ProductVariant, (e) => e.product)
   productVariants: ProductVariant[];
 
   @Column({ nullable: true, default: 0, name: "solongton" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   inventory: number;
 
   @Column({ nullable: false, name: "giaban" })
-  @IsNumber()
+  @IsNumber(
+    {},
+    {
+      message: "This field must be number",
+    }
+  )
   price: number;
 
   @CreateDateColumn({ name: "ngaytao" })
@@ -84,11 +94,11 @@ class Product {
   commentProducts: CommentProduct[];
 
   @Column({ nullable: true, name: "metatukhoa", default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   metaKeywords: string;
 
   @Column({ nullable: true, name: "metamota", default: "" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   metaDescription: string;
 }
 export default Product;

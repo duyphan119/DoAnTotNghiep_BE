@@ -1,6 +1,6 @@
-import QueryParams from "../QueryParams";
+import SearchParams from "../SearchParams";
 
-type GetAllCommentProductQueryParams = QueryParams &
+type CommentProductParams = SearchParams &
   Partial<{
     productId: string;
     content: string;
@@ -10,4 +10,4 @@ type GetAllCommentProductQueryParams = QueryParams &
     repComments: string;
   }>;
 
-export default GetAllCommentProductQueryParams;
+export default CommentProductParams;

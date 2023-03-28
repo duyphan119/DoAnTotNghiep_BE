@@ -1,60 +1,74 @@
 import slugify from "slugify";
-import {
-  Between,
-  In,
-  LessThanOrEqual,
-  MoreThan,
-  MoreThanOrEqual,
-  Not,
-} from "typeorm";
+import { Between, In, LessThanOrEqual, MoreThanOrEqual, Not } from "typeorm";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Product from "../entities/product.entity";
-import {
-  everageStar,
-  handleILike,
-  handlePagination,
-  handleSort,
-} from "../utils";
+import helper from "../utils";
 import { ICrudService } from "../utils/interfaces";
-import {
-  GetAll,
-  PaginationParams,
-  QueryParams,
-  SearchParams,
-} from "../utils/types";
 import {
   BestSellerProduct,
   CreateProductDTO,
-  GetAllProductQueryParams,
-  ProductHasMinMaxPrice,
+  GetAll,
+  ProductParams,
+  QueryParams,
   UpdateProductDTO,
-} from "../utils/types/product";
+} from "../utils/types";
 import commentProductService from "./commentProduct.service";
-import groupProductService from "./groupProduct.service";
 import orderItemService from "./orderItem.service";
 import productVariantService from "./productVariant.service";
 import productVariantImageService from "./productVariantImage.service";
 
 class ProductService
-  implements
-    ICrudService<
-      GetAll<Product | ProductHasMinMaxPrice>,
-      Product,
-      GetAllProductQueryParams,
-      CreateProductDTO,
-      UpdateProductDTO
-    >
+  implements ICrudService<Product, ProductParams, CreateProductDTO>
 {
-  createOne(dto: CreateProductDTO): Promise<Product | null> {
+  updateOne(
+    id: number,
+    dto: Partial<CreateProductDTO>
+  ): Promise<Product | null> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const existingItem = await this.getById(id);
+        if (existingItem) {
+          const newItem = await this.getRepository().save({
+            ...existingItem,
+            ...{
+              name: dto.name,
+              price: dto.price,
+              inventory: dto.inventory,
+              description: dto.description,
+              detail: dto.detail,
+              metaDescription: dto.metaDescription,
+              metaKeywords: dto.metaKeywords,
+            },
+          });
+          resolve(newItem);
+        }
+      } catch (error) {
+        console.log("VariantService.updateOne error", error);
+      }
+      resolve(null);
+    });
+  }
+  updateMany(
+    inputs: ({ id: number } & Partial<CreateProductDTO>)[]
+  ): Promise<(Product | null)[]> {
+    throw new Error("Method not implemented.");
+  }
+  updateInventory(id: number) {
     return new Promise(async (resolve, _) => {
       try {
-        const { name, productVariants, images, ...others } = dto;
-        const { description, detail } = others;
+        const totalInventory = await productVariantService.totalInventory(id);
+        await this.updateOne(id, { inventory: totalInventory });
+      } catch (error) {}
+    });
+  }
+  createOne(dto: CreateProductDTO): Promise<Product | null> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { productVariants, images, ...others } = dto;
         const product = await this.getRepository().save({
           ...others,
-          name,
-          slug: slugify(name, { lower: true, locale: "vi" }),
+          slug: slugify(others.name, { lower: true, locale: "vi" }),
         });
         const promises = [];
         promises.push(
@@ -69,11 +83,12 @@ class ProductService
           )
         );
         promises.push(
-          productVariantImageService.createProductVariantImages(
+          productVariantImageService.createMany(
             images.map((item) => ({ ...item, productId: product.id }))
           )
         );
         await Promise.allSettled(promises);
+        await this.updateInventory(product.id);
         resolve(product);
       } catch (error) {
         console.log("ProductService.createOne", error);
@@ -84,7 +99,7 @@ class ProductService
   createMany(listDto: CreateProductDTO[]): Promise<Product[]> {
     throw new Error("Method not implemented.");
   }
-  updateOne(id: number, dto: UpdateProductDTO): Promise<Product | null> {
+  updateProduct(id: number, dto: UpdateProductDTO): Promise<Product | null> {
     return new Promise(async (resolve, _) => {
       try {
         const promises: Array<Promise<any>> = [];
@@ -97,8 +112,10 @@ class ProductService
           updateImages,
           ...others
         } = dto;
+
         const product = await this.getRepository().findOneBy({ id });
         if (product) {
+          console.log("product", product.id);
           const { name } = others;
           const newProduct = await this.getRepository().save({
             ...product,
@@ -107,7 +124,7 @@ class ProductService
               ? { slug: slugify(name, { lower: true, locale: "vi" }) }
               : {}),
           });
-          if (newProductVariants) {
+          if (newProductVariants && newProductVariants.length > 0) {
             promises.push(
               productVariantService.createMany(
                 newProductVariants.map((item) => ({
@@ -133,11 +150,7 @@ class ProductService
             );
           }
           if (deleteImages) {
-            promises.push(
-              productVariantImageService.deleteProductVariantImages(
-                deleteImages
-              )
-            );
+            promises.push(productVariantImageService.deleteMany(deleteImages));
           }
           if (updateImages) {
             promises.push(
@@ -146,9 +159,8 @@ class ProductService
               )
             );
           }
-
           await Promise.allSettled(promises);
-
+          await this.updateInventory(newProduct.id);
           resolve(newProduct);
         }
       } catch (error) {
@@ -157,11 +169,7 @@ class ProductService
       resolve(null);
     });
   }
-  updateMany(
-    inputs: ({ id: number } & UpdateProductDTO)[]
-  ): Promise<Product[]> {
-    throw new Error("Method not implemented.");
-  }
+
   deleteOne(id: number): Promise<boolean> {
     return new Promise(async (resolve, _) => {
       try {
@@ -234,31 +242,44 @@ class ProductService
       }
     });
   }
-  search(params: SearchParams): Promise<GetAll<Product>> {
+  getRelations(params: ProductParams) {
+    const { product_variants, images, group_product } = params;
+    return {
+      ...(product_variants
+        ? { productVariants: { variantValues: { variant: true } } }
+        : {}),
+      ...(images ? { images: true } : {}),
+      ...(group_product ? { groupProduct: true } : {}),
+    };
+  }
+  search(params: ProductParams): Promise<GetAll<Product>> {
     return new Promise(async (resolve, _) => {
       try {
-        const { q } = params;
-        const { wherePagination } = handlePagination(params);
+        const { q, images } = params;
+        const { wherePagination } = helper.handlePagination(params);
+        const { sort, sortBy, sortType } = helper.handleSort(params);
 
-        let [products, count] = await this.getRepository().findAndCount({
+        let [items, count] = await this.getRepository().findAndCount({
           order: {
-            id: "DESC",
+            ...(sortBy === "groupProduct"
+              ? {
+                  groupProduct: { name: sortType },
+                }
+              : sort),
+            ...(images ? { images: { id: "DESC" } } : {}),
           },
-          where: [handleILike("slug", q), handleILike("name", q)],
+          where: [helper.handleILike("slug", q), helper.handleILike("name", q)],
           withDeleted: false,
           ...wherePagination,
-          relations: {
-            productVariants: { variantValues: { variant: true } },
-            images: true,
-          },
+          relations: this.getRelations(params),
         });
-        const newProducts = products.map((product: Product) => ({
-          ...product,
-          minPrice: this.price(product, "min"),
-          maxPrice: this.price(product, "max"),
-        })) as ProductHasMinMaxPrice[];
+        // const newProducts = products.map((product: Product) => ({
+        //   ...product,
+        //   minPrice: this.price(product, "min"),
+        //   maxPrice: this.price(product, "max"),
+        // })) as ProductHasMinMaxPrice[];
 
-        resolve({ items: newProducts, count });
+        resolve({ items, count });
       } catch (error) {
         console.log("ProductService.search error", error);
         resolve(EMPTY_ITEMS);
@@ -295,9 +316,7 @@ class ProductService
       : product.price;
   }
 
-  getAll(
-    params: GetAllProductQueryParams
-  ): Promise<GetAll<Product | ProductHasMinMaxPrice>> {
+  getAll(params: ProductParams): Promise<GetAll<Product>> {
     return new Promise(async (resolve, _) => {
       try {
         const { q } = params;
@@ -306,33 +325,31 @@ class ProductService
           const {
             name,
             slug,
-            product_variants,
             images,
-            group_product,
             group_product_slug,
             min_price,
             max_price,
             v_ids,
           } = params;
-          const { wherePagination } = handlePagination(params);
-          const { sortBy, sortType, sort } = handleSort(params);
+          const { wherePagination } = helper.handlePagination(params);
+          const { sortBy, sortType, sort } = helper.handleSort(params);
 
-          let [products, count] = await this.getRepository().findAndCount({
+          let [items, count] = await this.getRepository().findAndCount({
             order: {
               ...(sortBy === "groupProduct"
                 ? {
-                    groupProduct: { name: sortType === "ASC" ? "ASC" : "DESC" },
+                    groupProduct: { name: sortType },
                   }
                 : sort),
               ...(images ? { images: { id: "DESC" } } : {}),
             },
             where: {
-              ...handleILike("name", name),
-              ...handleILike("slug", slug),
+              ...helper.handleILike("name", name),
+              ...helper.handleILike("slug", slug),
               ...(group_product_slug
                 ? {
                     groupProduct: {
-                      ...handleILike("slug", group_product_slug),
+                      ...helper.handleILike("slug", group_product_slug),
                     },
                   }
                 : {}),
@@ -358,35 +375,29 @@ class ProductService
                 : {}),
             },
             ...wherePagination,
-            relations: {
-              ...(product_variants
-                ? { productVariants: { variantValues: { variant: true } } }
-                : {}),
-              ...(images ? { images: true } : {}),
-              ...(group_product ? { groupProduct: true } : {}),
-            },
+            relations: this.getRelations(params),
           });
-
-          if (product_variants) {
-            const newProducts = products.map((product: Product) => ({
-              ...product,
-              minPrice: this.price(product, "min"),
-              maxPrice: this.price(product, "max"),
-            })) as ProductHasMinMaxPrice[];
-            if (sortBy && sortBy === "price")
-              newProducts.sort(
-                (a: ProductHasMinMaxPrice, b: ProductHasMinMaxPrice) =>
-                  (a.minPrice - b.minPrice) * (sortType === "ASC" ? 1 : -1)
-              );
-            resolve({ items: newProducts, count });
-          } else {
-            resolve({ items: products, count });
-          }
+          resolve({ items, count });
+          // if (product_variants) {
+          //   const newProducts = products.map((product: Product) => ({
+          //     ...product,
+          //     minPrice: this.price(product, "min"),
+          //     maxPrice: this.price(product, "max"),
+          //   })) as ProductHasMinMaxPrice[];
+          //   if (sortBy && sortBy === "price")
+          //     newProducts.sort(
+          //       (a: ProductHasMinMaxPrice, b: ProductHasMinMaxPrice) =>
+          //         (a.minPrice - b.minPrice) * (sortType === "ASC" ? 1 : -1)
+          //     );
+          //   resolve({ items: newProducts, count });
+          // } else {
+          //   resolve({ items: products, count });
+          // }
         }
       } catch (error) {
         console.log("ProductService.getAll error", error);
-        resolve(EMPTY_ITEMS);
       }
+      resolve(EMPTY_ITEMS);
     });
   }
 
@@ -465,8 +476,9 @@ class ProductService
         });
         if (data) {
           const { items } = data;
-          const star = everageStar(items);
+          const star = helper.everageStar(items);
           await this.getRepository().update({ id }, { star });
+          _io.emit("Update Star Product", { id, star });
           resolve(true);
         }
       } catch (error) {
@@ -480,8 +492,8 @@ class ProductService
     return new Promise(async (resolve, _) => {
       try {
         const { slug } = params;
-        const { sort } = handleSort(params);
-        const { wherePagination } = handlePagination(params);
+        const { sort } = helper.handleSort(params);
+        const { wherePagination } = helper.handlePagination(params);
         const item = await this.getRepository().findOne({
           where: { slug: `${slug}` },
           relations: { groupProduct: true },

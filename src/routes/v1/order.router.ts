@@ -13,5 +13,6 @@ order.get("/:id", requireIsAdmin, orderController.getOrderById);
 order.get("/", requireIsAdmin, orderController.getAllOrders);
 order.patch("/checkout", requireLogin, orderController.checkout);
 order.patch("/:id/status", requireIsAdmin, orderController.updateStatus);
+order.delete("/user/:id", requireLogin, orderController.cancel);
 
 export default order;

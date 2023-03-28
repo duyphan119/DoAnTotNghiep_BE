@@ -16,15 +16,15 @@ class BlogCategory {
   id: number;
 
   @Column({ name: "tendanhmuc", unique: true, nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   name: string;
 
   @Column({ name: "bidanh", unique: true, nullable: false })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   slug: string;
 
   @Column({ name: "mota" })
-  @IsString()
+  @IsString({ message: "This field must be string" })
   description: string;
 
   @CreateDateColumn({ name: "ngaytao" })

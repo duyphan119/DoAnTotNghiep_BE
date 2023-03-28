@@ -1,2 +1,2 @@
-export { default as GetAllBlogCategoryQueryParams } from "./GetAllBlogCategoryQueryParams";
+export { default as BlogCategoryParams } from "./BlogCategoryParams";
 export { default as CreateBlogCategoryDTO } from "./CreateBlogCategoryDTO";

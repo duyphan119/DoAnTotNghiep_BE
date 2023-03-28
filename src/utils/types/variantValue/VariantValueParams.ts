@@ -1,10 +1,10 @@
 import SearchParams from "../SearchParams";
 
-type VariantValueQueryParams = SearchParams &
+type VariantValueParams = SearchParams &
   Partial<{
     variant: string;
     value: string;
     type: string;
   }>;
 
-export default VariantValueQueryParams;
+export default VariantValueParams;

@@ -1,4 +1,2 @@
-import QueryParams from "../QueryParams";
-
-export { default as GetAllOrderQueryParams } from "./GetAllOrderQueryParams";
+export { default as OrderParams } from "./OrderParams";
 export { default as CreateOrderDTO } from "./CreateOrderDTO";
