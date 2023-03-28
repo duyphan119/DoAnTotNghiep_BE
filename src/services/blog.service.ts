@@ -1,3 +1,4 @@
+import slugify from "slugify";
 import { EMPTY_ITEMS } from "../constantList";
 import { AppDataSource } from "../data-source";
 import Blog from "../entities/blog.entity";
@@ -84,7 +85,13 @@ class BlogService implements ICrudService<Blog, BlogParams, CreateBlogDTO> {
   createOne(dto: CreateBlogDTO): Promise<Blog | null> {
     return new Promise(async (resolve, reject) => {
       try {
-        const newItem = await this.getRepository().save(dto);
+        const newItem = await this.getRepository().save({
+          ...dto,
+          slug: slugify(dto.title, {
+            lower: true,
+            locale: "vi",
+          }),
+        });
         resolve(newItem);
       } catch (error) {
         console.log("BlogService.getById error", error);
@@ -113,6 +120,14 @@ class BlogService implements ICrudService<Blog, BlogParams, CreateBlogDTO> {
           const newItem = await this.getRepository().save({
             ...existingItem,
             ...dto,
+            ...(dto.title
+              ? {
+                  slug: slugify(dto.title, {
+                    lower: true,
+                    locale: "vi",
+                  }),
+                }
+              : {}),
           });
           resolve(newItem);
         }

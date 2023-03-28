@@ -58,6 +58,7 @@ class UserService implements ICrudService<User, UserParams, CreateUserDTO> {
         const { password } = dto;
 
         const hashedPassword = await this.hashPassword(password);
+        console.log(hashedPassword);
 
         const newItem = await this.getRepository().save({
           ...dto,
@@ -65,8 +66,9 @@ class UserService implements ICrudService<User, UserParams, CreateUserDTO> {
         });
         resolve(newItem);
       } catch (error) {
-        console.log("UserService.createOne", error);
+        console.log("UserService.createOne error", error);
       }
+      resolve(null);
     });
   }
   createMany(listDto: CreateUserDTO[]): Promise<(User | null)[]> {

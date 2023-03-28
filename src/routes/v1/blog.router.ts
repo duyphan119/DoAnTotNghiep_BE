@@ -1,4 +1,6 @@
-import { Router } from "express";
+import axios from "axios";
+import * as cheerio from "cheerio";
+import { Request, Response, Router } from "express";
 import blogController from "../../controllers/blog.controller";
 import { requireIsAdmin } from "../../middlewares/auth.middleware";
 
@@ -76,5 +78,18 @@ router.delete("/restore/many", requireIsAdmin, blogController.restoreMany);
 router.delete("/restore/:id", requireIsAdmin, blogController.restoreOne);
 router.delete("/force/many", requireIsAdmin, blogController.deleteMany);
 router.delete("/force/:id", requireIsAdmin, blogController.deleteOne);
+
+router.get("/123/test", async (req: Request, res: Response) => {
+  const { data: html } = await axios.get("https://yody.vn/blog-thoi-trang-nu");
+  const $ = cheerio.load(html);
+  $(".list-blogs .row").each(function () {
+    const src = $(this).find(".item-blog .thumb img").attr("src");
+    const title = $(this).find(".item-blog .content h3").text();
+    const heading = $(this).find(".item-blog .content h3 + p").text();
+    console.log(src);
+  });
+
+  res.send("OK");
+});
 
 export default router;
